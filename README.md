@@ -49,7 +49,7 @@ They need bash, git and awk. Scratch output goes to `.swe/` in the project, whic
 ## Install
 
 ```bash
-git clone <this repo> && cd swe-harness
+git clone https://github.com/Crypto-Gi/swe-harness && cd swe-harness
 ./install.sh            # copies skills to ~/.claude/skills and ~/.agents/skills
 ./install.sh core       # core four only
 ```
@@ -73,4 +73,4 @@ Restart the agent afterwards. Update: `git pull`, run it again.
 
 ## Licence
 
-MIT (`LICENSE`). Borrowed material keeps its own licence; see `SOURCES.md`.
+Apache-2.0 (`LICENSE`). Borrowed material keeps its own licence; see `SOURCES.md`.
