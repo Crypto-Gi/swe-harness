@@ -6,7 +6,7 @@
   <a href="https://github.com/Crypto-Gi/swe-harness/actions/workflows/check.yml"><img alt="check" src="https://github.com/Crypto-Gi/swe-harness/actions/workflows/check.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue.svg"></a>
   <img alt="Core skills: 5" src="https://img.shields.io/badge/core%20skills-5-brightgreen">
-  <img alt="Works with Claude, Codex, Cursor, Gemini CLI" src="https://img.shields.io/badge/works%20with-Claude%20%7C%20Codex%20%7C%20Cursor%20%7C%20Gemini%20CLI-8A2BE2">
+  <img alt="Works with Claude, Codex, Devin, Cursor, Gemini CLI" src="https://img.shields.io/badge/works%20with-Claude%20%7C%20Codex%20%7C%20Devin%20%7C%20Cursor%20%7C%20Gemini%20CLI-8A2BE2">
   <a href="https://agentskills.io"><img alt="Agent Skills format" src="https://img.shields.io/badge/format-Agent%20Skills-orange"></a>
 </p>
 
@@ -105,6 +105,17 @@ Codex reads skills from `~/.agents/skills` and project rules from `AGENTS.md`. R
 </details>
 
 <details>
+<summary><b>Devin Desktop (formerly Windsurf) and Devin CLI</b></summary>
+
+```bash
+git clone https://github.com/Crypto-Gi/swe-harness && cd swe-harness
+./install.sh
+```
+
+Both read skills from `~/.agents/skills` and project rules from `AGENTS.md`, root and nested, with no setup. Devin Desktop also reads `~/.claude/skills` when its Claude Code compatibility is on. For the cloud agent at app.devin.ai, commit the skills into the repository under `.agents/skills/`, or add them as a Devin plugin.
+</details>
+
+<details>
 <summary><b>Cursor, Gemini CLI, GitHub Copilot and others</b></summary>
 
 Cursor, Gemini CLI and Copilot also read `~/.agents/skills`, so `./install.sh` covers them. Gemini CLI reads `GEMINI.md` by default; to make it read `AGENTS.md`, add this to `.gemini/settings.json`:
@@ -156,7 +167,7 @@ Pinned skills change only when their commit in [`optional/sources`](optional/sou
 | [`swe-bootstrap`](skills/swe-bootstrap/SKILL.md) | Sets up a repo: short `AGENTS.md`, `CLAUDE.md` as `@AGENTS.md`, decision-record format | "bootstrap this project" |
 | [`swe-change`](skills/swe-change/SKILL.md) | Any code change, start to finish: shapes new ideas, implements, verifies, keeps only what matters, and commits with the README brought up to date | "implement this", "fix this", "continue the work" |
 | [`swe-verify`](skills/swe-verify/SKILL.md) | Done is an exit code, and tests must not have been weakened | "is it done", "verify this" |
-| [`swe-review`](skills/swe-review/SKILL.md) | A fresh context tries to refute the change | "review this" |
+| [`swe-review`](skills/swe-review/SKILL.md) | A fresh context tries to refute the change; uses Claude Code's `/code-review` where available | "review this" |
 | [`swe-debug`](skills/swe-debug/SKILL.md) | Reproduce with one command before theorising; stop after three failed fixes | "debug this" |
 
 **Where project knowledge lives**, and nowhere else:
@@ -177,6 +188,23 @@ Pinned skills change only when their commit in [`optional/sources`](optional/sou
 | `test-guard` | Flags deleted or skipped tests, silenced checkers, removed assertions |
 | `review-package` | Writes the diff under review to one file for the reviewer |
 | `detect-stack` | Lists stack, workspaces, build tools and candidate check commands |
+
+## 🤝 Works alongside built-in skills
+
+You don't list built-in skills anywhere: each app shows its own skills to the model, and it picks by description. Ours are all named `swe-*`, so none replaces a built-in. Where Claude Code already does the job well, the harness uses it instead of duplicating it:
+
+| Claude Code built-in | How the harness uses it |
+|---|---|
+| `/code-review` | `swe-review` runs it for bug-finding, then adds what it doesn't check: the change against what you asked for, weakened tests, and a bounded fix loop |
+| `/verify`, `/run` | `swe-verify` proves checks pass; `/verify` (you run it) watches the app work. `swe-browser-check` uses `/run` to launch the page |
+| `/security-review` | Use it for everyday changes; `swe-security-audit` is for a full codebase audit |
+| `/simplify` | Use it to clean up over-built code; the harness has no duplicate |
+| `/init` | Use `swe-bootstrap` instead: it writes `AGENTS.md`, which Codex, Cursor and Devin read too. Bootstrap moves anything useful out of an existing `/init` file |
+| `/debug` | Unrelated: it debugs Claude Code's session. `swe-debug` is for bugs in your code |
+
+In Codex and other agents, `swe-review` does the whole review itself. Claude desktop's document skills (Word, PDF, slides, spreadsheets) don't overlap and work as before.
+
+Keep the number of installed skills small: the skill list gets about 1% of the context window, and when it overflows, descriptions are cut and skills stop triggering. In Claude Code, `/skill-doctor` shows what each skill costs.
 
 ## 🚫 Not included, on purpose
 

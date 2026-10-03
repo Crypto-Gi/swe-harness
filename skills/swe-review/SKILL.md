@@ -12,8 +12,10 @@ Terms: a **subagent** is whatever your platform uses to run a task in a fresh co
 ## Steps
 1. **Requirements.** Collect what the change was supposed to do: the user's request in their words, the plan or spec file if one exists, and the `docs/decisions/` entries for the touched area. If you cannot state the requirements, ask before reviewing.
 2. **Package the diff.** `bash scripts/review-package <BASE> [HEAD]`, where BASE is the commit recorded before the work began (`git merge-base HEAD main` if none was recorded; never `HEAD~1`). It prints a file path. Do not read the diff into your own context.
-3. **Dispatch one reviewer** with `references/reviewer-prompt.md`, filled in. Give it the requirements text and the diff path. Do not give it your reasoning, your summary of what you built, or this conversation.
-4. **Handle the result.**
+3. **Dispatch the review.** Give the reviewer the requirements and the diff path, never your reasoning, your summary of what you built, or this conversation.
+   - **In Claude Code**, use the built-in `/code-review` for bugs: run it on the same range (`/code-review <BASE>...HEAD`; with no range it covers commits ahead of upstream plus uncommitted work). Then dispatch one reviewer with `references/reviewer-prompt.md` with FOCUS set to "requirements and tests", because `/code-review` does not check the change against what was asked or whether the tests were weakened.
+   - **Elsewhere**, or if `/code-review` is unavailable, dispatch one reviewer with `references/reviewer-prompt.md` and FOCUS set to "everything".
+4. **Handle the results** from both, as one list of findings.
    - Output that does not follow the format is discarded and the review re-run fresh. Never repair a reviewer's output yourself.
    - Check each finding against the code before acting. Push back with evidence on findings that are wrong; do not implement a suggestion nothing calls for.
    - Re-grade by effect on a user, not by whether the spec mentioned it.
@@ -23,7 +25,7 @@ Terms: a **subagent** is whatever your platform uses to run a task in a fresh co
 7. **Report** the reviewer's verdict lines, what you fixed, what you declined and why, and what was not reviewed.
 
 ## Rules
-- One reviewer, one pass. More reviewers produce more findings, not more truth.
+- One pass per kind of check. More reviewers produce more findings, not more truth.
 - The reviewer is read-only and does not spawn subagents. It starts from the diff and reads further only to validate a named risk: callers of a changed contract, shared state, concurrency, or fit with the architecture.
 - A finding needs a file:line, who or what is affected, and the concrete wrong result. "Could be cleaner" with no consequence is not a finding.
 - "Nothing found" is a valid result. Do not ask the reviewer to try harder until it invents something.

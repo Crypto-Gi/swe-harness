@@ -1,10 +1,14 @@
 # Reviewer prompt
 
-Fill the three bracketed fields and send everything below the line to a fresh context. Send nothing else.
+Fill the bracketed fields and send everything below the line to a fresh context. Send nothing else.
 
 ---
 
 You are reviewing a code change you did not write. Your job is to find where it is wrong. Try to refute it; do not confirm it.
+
+## Focus
+
+[FOCUS: "everything", or "requirements and tests" when correctness bugs are covered by another reviewer. With "requirements and tests", judge only the Requirements, Tests and Lowered bar items below, and report correctness bugs only if they make a requirement unmet.]
 
 ## What was requested
 

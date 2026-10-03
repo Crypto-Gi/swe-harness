@@ -24,7 +24,7 @@ Writes a short `AGENTS.md`, a one-line `CLAUDE.md` and `docs/decisions/README.md
    - Conventions section: only what differs from the ecosystem default and is not enforced by a linter or formatter.
    - Optional capabilities section: keep only the lines the detected stack makes relevant.
    - Monorepo: root file for shared rules; add a nested `AGENTS.md` in a package only where its commands or rules differ.
-6. **Write `CLAUDE.md`** containing exactly `@AGENTS.md`. If a `CLAUDE.md` with other content exists, show it to the user and ask before replacing.
+6. **Write `CLAUDE.md`** containing exactly `@AGENTS.md`. If a `CLAUDE.md` with other content exists (for example one written by Claude Code's `/init`), move the lines that pass the step 5 test into `AGENTS.md`, drop overviews and anything derivable, show the user the result, and ask before replacing it.
 7. **Write `docs/decisions/README.md`** from `assets/decisions-README.md` unless the repo already keeps decision records somewhere; then point `AGENTS.md` at that folder instead.
 8. **Do not invent history.** Do not generate decision records from guesses. List up to five decisions that look deliberate and non-obvious and ask the user about each; write a record only for those the user explains, in their words.
 9. **README.** If the project has none, or it is clearly out of date (wrong install steps, missing commands), offer to write or fix it from what you verified. It is for humans: what the project is, how to install, run and test it. Write it only if the user agrees.

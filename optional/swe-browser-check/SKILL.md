@@ -8,7 +8,7 @@ description: Check a web UI change in a real browser before calling it done. Use
 Reading the code does not show what the page does. Load it and look.
 
 ## Tool
-Use whatever browser control this session has: a Playwright CLI or MCP server, the Chrome DevTools MCP server, or the app's built-in browser. If there is none, say `DEGRADED: no browser available`, list the checks below as not run, and stop; do not report a visual result from reading code.
+Use whatever browser control this session has: a Playwright CLI or MCP server, the Chrome DevTools MCP server, or the app's built-in browser. In Claude Code, `/run` can launch the app and drive it; use it to get the page up, then make the checks below. If there is none, say `DEGRADED: no browser available`, list the checks below as not run, and stop; do not report a visual result from reading code.
 
 Use an isolated or temporary browser profile, never the user's logged-in one, unless the user says the check needs their session.
 

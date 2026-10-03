@@ -10,6 +10,7 @@ Where to paste the block below:
 | Codex (CLI, IDE, ChatGPT desktop) | `~/.codex/AGENTS.md`, or Settings → Custom instructions |
 | Claude desktop and claude.ai | Settings → Profile → personal preferences, or a Project's instructions |
 | ChatGPT | Settings → Personalization → Custom instructions |
+| Devin CLI | `~/.config/devin/AGENTS.md` (Windows: `%APPDATA%\devin\AGENTS.md`) |
 | Cursor | Settings → Rules → User rules |
 
 ```text
