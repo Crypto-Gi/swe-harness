@@ -1,89 +1,199 @@
-# swe-harness
+<h1 align="center">swe-harness</h1>
 
-A small engineering brain and harness for coding agents. One repo, installed once, used in any project with Claude Code or Codex.
+<p align="center"><b>A lean engineering brain for AI coding agents: finish changes properly, prove they work, and remember why.</b></p>
 
-The model does the engineering. This supplies what it cannot give itself: a habit of working a change through to the end, proof that the work is finished, a reviewer that did not write the code, and a place where the reasons outlive the session.
+<p align="center">
+  <a href="https://github.com/Crypto-Gi/swe-harness/actions/workflows/check.yml"><img alt="check" src="https://github.com/Crypto-Gi/swe-harness/actions/workflows/check.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue.svg"></a>
+  <img alt="Core skills: 5" src="https://img.shields.io/badge/core%20skills-5-brightgreen">
+  <img alt="Works with Claude, Codex, Cursor, Gemini CLI" src="https://img.shields.io/badge/works%20with-Claude%20%7C%20Codex%20%7C%20Cursor%20%7C%20Gemini%20CLI-8A2BE2">
+  <a href="https://agentskills.io"><img alt="Agent Skills format" src="https://img.shields.io/badge/format-Agent%20Skills-orange"></a>
+</p>
 
-## How it fits together
-
+```mermaid
+flowchart LR
+    U(["You: implement this"]) --> C
+    subgraph core ["Core skills"]
+        C["swe-change<br/>understand, design, implement"] --> V["swe-verify<br/>an exit code, not a claim"]
+        V -->|risky or large| R["swe-review<br/>fresh eyes try to refute it"]
+        C -.->|bug survives a fix| D["swe-debug<br/>reproduce first"]
+    end
+    V --> K{"Close out: what can't<br/>code, tests and git explain?"}
+    R --> K
+    K -->|big trade-off| DEC[("docs/decisions")]
+    K -->|intended behaviour| SPEC[("docs/specs")]
+    K -->|rule or command| AG[("AGENTS.md")]
+    K -->|why this code| GIT[("commit message")]
+    K -->|everything else| X["discarded"]
 ```
-CORE (installed by default)        swe-bootstrap  swe-change  swe-verify  swe-review  swe-debug
 
-PROJECT KNOWLEDGE (kept, small)    AGENTS.md          operating rules, commands that were run
-                                   docs/decisions/    significant or hard-to-reverse decisions
-                                   docs/specs/        intended behaviour, only when useful
-                                   docs/plans/        temporary, deleted when the work closes
-                                   commit messages    why this implementation
+## 🤔 Why
 
-DERIVED ON DEMAND (never stored)   repo structure, symbols, callers and dependencies, git history
+Coding agents are strong, but every session starts from zero and ends with "done!" whether or not it is. Three things go wrong again and again:
 
-OPTIONAL (installed by name)       browser/UI check, security audit, React and Next.js rules
-```
+- ❌ **"Done" without proof.** The agent says the tests pass; nobody ran them after the last edit.
+- 🙈 **The author grades its own work.** The context that wrote the bug explains it away.
+- 🧠 **The reasons evaporate.** Why a design was chosen, what was rejected, what the system must keep doing: gone when the session ends.
 
-Code, tests and git are the source of truth. The kept knowledge is only what they cannot explain.
+The usual fixes are heavy: spec frameworks with phase gates, memory databases, agent swarms, generated wikis that go stale. **swe-harness does the opposite.** The model does the engineering; the harness adds only what a strong model cannot give itself.
 
-## Core skills
-
-| Skill | What it owns | Say |
+| | What you get | How |
 |---|---|---|
-| `swe-bootstrap` | Sets up a repository: a short `AGENTS.md` (every command run first), `CLAUDE.md` as `@AGENTS.md`, the decision-record format | "bootstrap this project" |
-| `swe-change` | Any code change, start to finish: understand, design when there is a real choice, implement, verify, then keep what is worth keeping | "implement this", "fix this", "continue the work" |
-| `swe-verify` | Done is an exit code: the check must pass after the last edit, and tests must not have been weakened | "is it done", "verify this" |
-| `swe-review` | A fresh context that sees the diff and the requirements and tries to refute the change | "review this" |
-| `swe-debug` | Hard bugs: reproduce with one command before theorising; stop after three failed fixes | "debug this" |
+| ✅ | Proof of done | A script records a pass only when the check exits 0 after the last edit |
+| 🔍 | Independent review | A fresh context gets the diff and the requirements, never the author's reasoning |
+| 🛡️ | No quiet cheating | A guard flags deleted tests, skipped tests and silenced linters |
+| 📌 | Memory that stays small | At the end of a change, keep only what code, tests and git can't explain |
 
-A small change through `swe-change` is just understand, edit, verify. Plans and specs are written only when the work needs them. At the end it asks what was learned that code, tests and git cannot cheaply give back, and files only that; "nothing worth keeping" is a normal answer.
+Repo structure, symbols, callers and history are looked up from the code when needed and never stored, so they never go stale.
 
-## Optional skills
+## 🚀 Quick start
 
-| Install key | Skill | From | Use it when |
-|---|---|---|---|
-| `browser` | `swe-browser-check` | this repo | Anything that renders in a browser changed |
-| `security` | `swe-security-audit` | Cloudflare, fetched | A security question, or a full audit of a codebase |
-| `react` | `swe-react` | Vercel, fetched | Writing or reviewing React or Next.js code |
+```bash
+git clone https://github.com/Crypto-Gi/swe-harness && cd swe-harness && ./install.sh
+```
 
-Fetched skills are not stored here. `optional/sources` pins each to one upstream commit and records its licence; `install.sh` downloads exactly that commit, only when asked, and writes a `SOURCE` file into the installed folder. To update one, read the upstream diff and change the commit in `optional/sources`.
+Restart your agent, open any code repository and say:
 
-## Scripts
+```
+bootstrap this project
+```
 
-| Script | What it does |
-|---|---|
-| `swe-verify/scripts/verified` | Runs a check and records it as passed only on exit 0 |
-| `swe-verify/scripts/test-guard` | Flags deleted or skipped tests, silenced checkers, removed assertions |
-| `swe-review/scripts/review-package` | Writes the diff under review to one file for the reviewer |
-| `swe-bootstrap/scripts/detect-stack` | Lists the stack, workspaces, build tools and candidate check commands from manifest files |
+You get a short `AGENTS.md` whose check commands were actually run, a one-line `CLAUDE.md`, and a home for decision records. Then work as usual:
 
-They need bash, git and awk. Scratch output goes to `.swe/` in the project, which ignores itself.
+```
+add rate limiting to the login endpoint
+```
 
-## Install
+`swe-change` takes it from there: understand, implement, verify, review if it is risky, and file anything worth remembering.
+
+## 📦 Install
+
+`./install.sh` copies the five core skills into `~/.claude/skills` and `~/.agents/skills`. It needs no network.
+
+<details open>
+<summary><b>Claude Code</b> (terminal, IDE, desktop Code tab)</summary>
 
 ```bash
 git clone https://github.com/Crypto-Gi/swe-harness && cd swe-harness
-./install.sh                    # core only; no network needed
-./install.sh browser            # core + browser check
-./install.sh security react     # core + fetched specialist skills
+./install.sh
+```
+
+Restart Claude Code, then ask "bootstrap this project".
+</details>
+
+<details>
+<summary><b>Claude desktop and claude.ai</b></summary>
+
+These apps take skills as uploads, one zip per skill. Ready-made zips are in [`zips/`](zips/).
+
+1. Open a zip on GitHub, starting with [`swe-change.zip`](zips/swe-change.zip), and click **Download raw file**.
+2. In the app: **Customize → Skills → + → Upload a skill**, and pick the zip.
+3. Repeat for `swe-bootstrap`, `swe-verify`, `swe-review` and `swe-debug`, plus `swe-browser-check` if you build web UIs.
+
+The scripts inside need a session that can run commands on your project files.
+</details>
+
+<details>
+<summary><b>Codex</b> (CLI, IDE extension, ChatGPT desktop app)</summary>
+
+```bash
+git clone https://github.com/Crypto-Gi/swe-harness && cd swe-harness
+./install.sh
+```
+
+Codex reads skills from `~/.agents/skills` and project rules from `AGENTS.md`. Restart Codex after installing.
+</details>
+
+<details>
+<summary><b>Cursor, Gemini CLI, GitHub Copilot and others</b></summary>
+
+Cursor, Gemini CLI and Copilot also read `~/.agents/skills`, so `./install.sh` covers them. Gemini CLI reads `GEMINI.md` by default; to make it read `AGENTS.md`, add this to `.gemini/settings.json`:
+
+```json
+{ "context": { "fileName": ["AGENTS.md", "GEMINI.md"] } }
+```
+
+For other agents that support the [Agent Skills](https://agentskills.io) format, the community installer can put the core skills where that agent looks:
+
+```bash
+npx skills add Crypto-Gi/swe-harness
+```
+</details>
+
+<details>
+<summary><b>Windows</b></summary>
+
+Run `./install.sh` from Git Bash or WSL, or copy each folder in `skills/` into `%USERPROFILE%\.claude\skills` and `%USERPROFILE%\.agents\skills`. For Claude desktop, use the zips.
+</details>
+
+### Optional specialist skills
+
+Install only what a project needs. Third-party skills are downloaded on request, pinned to one upstream commit, and never stored in this repo.
+
+```bash
+./install.sh browser     # swe-browser-check: console, network, two screen widths, accessibility
+./install.sh security    # swe-security-audit: Cloudflare's security audit (fetched)
+./install.sh react       # swe-react: Vercel's React and Next.js rules (fetched)
 ./install.sh all
 ```
 
-Skills are copied to `~/.claude/skills` and `~/.agents/skills`. Restart the agent afterwards. Update: `git pull`, run it again.
-
-`swe-security-audit` needs Node for its validators. `swe-browser-check` needs a browser tool in the session (Playwright, Chrome DevTools MCP, or the app's own browser).
-
-## Not included, on purpose
-
-- Hooks. A stop hook that runs the project's check is a reasonable per-agent add-on; nothing here depends on one.
-- Language packs. A language needs its check commands in `AGENTS.md`, which bootstrap finds and runs.
-- A stored map, index, graph or wiki of the code.
-- Tiers, phase gates, a task tracker, personas or agent teams.
-- A spec framework. A spec here is a requirement and its scenarios.
-
-## Checking this repo
+### Update
 
 ```bash
-./check             # skill lint and script tests, offline
-./check --network   # also fetches the pinned optional skills into a throwaway HOME
+git pull && ./install.sh
 ```
 
-## Licence
+Pinned skills change only when their commit in [`optional/sources`](optional/sources) changes.
 
-Apache-2.0 (`LICENSE`). Borrowed material keeps its own licence; see `SOURCES.md`.
+## 🧰 What's inside
+
+| Skill | What it owns | Say |
+|---|---|---|
+| [`swe-bootstrap`](skills/swe-bootstrap/SKILL.md) | Sets up a repo: short `AGENTS.md`, `CLAUDE.md` as `@AGENTS.md`, decision-record format | "bootstrap this project" |
+| [`swe-change`](skills/swe-change/SKILL.md) | Any code change, start to finish, ending with a close-out that keeps only what matters | "implement this", "fix this", "continue the work" |
+| [`swe-verify`](skills/swe-verify/SKILL.md) | Done is an exit code, and tests must not have been weakened | "is it done", "verify this" |
+| [`swe-review`](skills/swe-review/SKILL.md) | A fresh context tries to refute the change | "review this" |
+| [`swe-debug`](skills/swe-debug/SKILL.md) | Reproduce with one command before theorising; stop after three failed fixes | "debug this" |
+
+**Where project knowledge lives**, and nowhere else:
+
+| Place | Holds |
+|---|---|
+| `AGENTS.md` | Operating rules and check commands that were run |
+| `docs/decisions/` | Significant or hard-to-reverse decisions, and why |
+| `docs/specs/` | Intended behaviour, only when code and tests can't carry it |
+| `docs/plans/` | Temporary, for multi-session work; deleted at the end |
+| Commit messages | Why this implementation |
+
+**Tech stack:** Markdown skills in the [Agent Skills](https://agentskills.io) format, plus four small bash scripts that need only bash, git and awk. No runtime, server or database.
+
+| Script | Does |
+|---|---|
+| `verified` | Runs a check and records it as passed only on exit 0 |
+| `test-guard` | Flags deleted or skipped tests, silenced checkers, removed assertions |
+| `review-package` | Writes the diff under review to one file for the reviewer |
+| `detect-stack` | Lists stack, workspaces, build tools and candidate check commands |
+
+## 🚫 Not included, on purpose
+
+- No hooks, router skill, or anything always loaded beyond skill descriptions
+- No stored code map, index, graph or wiki
+- No tiers, phase gates, task tracker, personas or agent teams
+- No language packs: a language needs its check commands, which bootstrap finds and runs
+
+## 🤝 Contributing
+
+Bug reports, ideas and pull requests are welcome: [open an issue](https://github.com/Crypto-Gi/swe-harness/issues).
+
+Every addition has to pass one question: **does it preserve engineering knowledge that can't be derived from code, tests and git, or give feedback a strong model can't give itself?** If not, it stays out. Repo rules are in [`AGENTS.md`](AGENTS.md).
+
+Before opening a pull request:
+
+```bash
+./install.sh zip   # if you changed a skill
+./check            # skill lint, script tests, zip freshness
+```
+
+## 📄 Licence and credits
+
+Apache-2.0, see [`LICENSE`](LICENSE). Built on ideas and text from [superpowers](https://github.com/obra/superpowers), [mattpocock/skills](https://github.com/mattpocock/skills), [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills), [Cloudflare's security-audit-skill](https://github.com/cloudflare/security-audit-skill), [ponytail](https://github.com/DietrichGebert/ponytail) and [impeccable](https://github.com/pbakaus/impeccable). Every borrowed file, its upstream commit and its licence are in [`SOURCES.md`](SOURCES.md).

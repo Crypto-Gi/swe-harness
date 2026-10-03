@@ -4,6 +4,7 @@
 # ./install.sh security   + swe-security-audit (fetched at the commit pinned in optional/sources)
 # ./install.sh react      + swe-react          (fetched at the commit pinned in optional/sources)
 # ./install.sh all        core and every optional skill
+# ./install.sh zip        rebuild zips/ (core + browser) for uploading to the Claude apps; installs nothing
 # Skills go to ~/.claude/skills and ~/.agents/skills.
 set -e
 cd "$(dirname "$0")"
@@ -47,6 +48,27 @@ fetch() { # fetch KEY: download one pinned specialist skill and install it
   rm -rf "$tmp"
 }
 
+if [ "${1:-}" = zip ]; then
+  command -v python3 >/dev/null || { echo "python3 is needed to build zips" >&2; exit 1; }
+  mkdir -p zips
+  for d in skills/*/ optional/swe-browser-check/; do
+    python3 - "$d" <<'PY2'
+import os, sys, zipfile
+src = sys.argv[1].rstrip('/'); name = os.path.basename(src)
+with zipfile.ZipFile(f'zips/{name}.zip', 'w', zipfile.ZIP_DEFLATED) as z:
+    for root, dirs, files in os.walk(src):
+        dirs.sort()
+        for f in sorted(files):
+            p = os.path.join(root, f)
+            info = zipfile.ZipInfo(os.path.join(name, os.path.relpath(p, src)), (1980, 1, 1, 0, 0, 0))
+            info.external_attr = (0o755 if os.access(p, os.X_OK) else 0o644) << 16
+            z.writestr(info, open(p, 'rb').read(), zipfile.ZIP_DEFLATED)
+PY2
+    echo "zips/$(basename "$d").zip"
+  done
+  exit 0
+fi
+
 for d in skills/*/; do put "$d" "$(basename "$d")"; done
 [ "$#" -gt 0 ] || set -- core
 for arg in "$@"; do
@@ -55,7 +77,7 @@ for arg in "$@"; do
     browser) put optional/swe-browser-check swe-browser-check ;;
     security|react) fetch "$arg" ;;
     all) put optional/swe-browser-check swe-browser-check; fetch security; fetch react ;;
-    *) echo "usage: $0 [browser] [security] [react] [all]" >&2; exit 1 ;;
+    *) echo "usage: $0 [browser] [security] [react] [all] | $0 zip" >&2; exit 1 ;;
   esac
 done
 echo "done: restart the agent to load the skills"

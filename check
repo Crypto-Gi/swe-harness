@@ -42,6 +42,15 @@ sh -n install.sh 2>/dev/null || err "install.sh: syntax error"
 [ ! -d skills/swe-security-audit ] && [ ! -d skills/swe-react ] || err "vendor skills must not be stored in this repo; they are fetched via optional/sources"
 [ "$fail" = 0 ] && echo "ok: skill lint"
 
+# zips are byte-reproducible; a stale one is a bug
+if command -v python3 >/dev/null 2>&1; then
+  z=$(mktemp -d); cp -R skills optional install.sh "$z"/
+  (cd "$z" && sh ./install.sh zip >/dev/null)
+  for f in "$z"/zips/*.zip; do cmp -s "$f" "zips/$(basename "$f")" || err "zips/$(basename "$f") is stale: run ./install.sh zip"; done
+  [ "$(ls zips | wc -l)" = "$(ls "$z"/zips | wc -l)" ] || err "zips/ holds files install.sh zip does not build"
+  rm -rf "$z"
+fi
+
 # 2. Script tests
 bash tests/run || fail=1
 

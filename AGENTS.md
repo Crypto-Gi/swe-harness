@@ -7,7 +7,9 @@ A lean engineering brain and harness for coding agents (Claude Code and Codex): 
 - `optional/`: specialist skills. Ours live here as folders (`swe-browser-check`). Other people's are one line each in `optional/sources` (repository, pinned commit, path, licence) and are fetched by `install.sh` on request.
 - `tests/run`: self-tests for every script and for the installer.
 - `check`: the full check for this repo. `./check --network` also fetches the pinned optional skills.
-- `install.sh`: default installs the core with no network; optional skills by name.
+- `install.sh`: default installs the core with no network; optional skills by name. `./install.sh zip` rebuilds `zips/` (core + browser) for uploading to the Claude apps.
+- `zips/`: committed, byte-reproducible. After changing a skill, run `./install.sh zip`; `./check` fails on a stale zip.
+- `.github/workflows/check.yml`: runs `./check --network` on every push.
 
 ## Rules
 - Run `./check` before saying a change is done. It must exit 0.
