@@ -42,6 +42,22 @@ for m in $manifests; do
 done
 [ "$found" = 1 ] || say "stack: none detected from manifest files"
 
+# Workspaces and build tools: one line each, so the agent knows to scope commands per package.
+ws=""
+has pnpm-workspace.yaml && ws="$ws pnpm-workspace.yaml"
+has package.json && grep -q '"workspaces"' package.json && ws="$ws package.json:workspaces"
+has lerna.json && ws="$ws lerna.json"
+has Cargo.toml && grep -q '^\[workspace\]' Cargo.toml && ws="$ws Cargo.toml:[workspace]"
+has go.work && ws="$ws go.work"
+{ has settings.gradle || has settings.gradle.kts; } && grep -qs 'include' settings.gradle settings.gradle.kts && ws="$ws settings.gradle"
+has pyproject.toml && grep -q '^\[tool\.uv\.workspace\]' pyproject.toml && ws="$ws pyproject.toml:[tool.uv.workspace]"
+[ -n "$ws" ] && say "monorepo:$ws ($(echo "$manifests" | grep -c .) manifests within depth 3; check commands may differ per package)"
+has turbo.json && say "build tool: turborepo (candidate: turbo run test lint build; add --filter=<package> to scope)"
+has nx.json && say "build tool: nx (candidate: nx affected -t test lint build)"
+{ has WORKSPACE || has WORKSPACE.bazel || has MODULE.bazel; } && say "build tool: bazel (candidate: bazel test //...; bazel query for dependencies)"
+has pants.toml && say "build tool: pants (candidate: pants test ::)"
+{ has justfile || has Justfile; } && say "task runner: just (run 'just --list')"
+{ has Taskfile.yml || has Taskfile.yaml; } && say "task runner: task (run 'task --list')"
 has Makefile && say "makefile targets: $(grep -oE '^[A-Za-z0-9_.-]+:' Makefile | tr -d ':' | sort -u | tr '\n' ' ')"
 ci=$(ls .github/workflows/*.y*ml .gitlab-ci.yml .circleci/config.yml 2>/dev/null | tr '\n' ' ')
 [ -n "$ci" ] && say "ci: $ci(read these: CI is the best record of the real check commands)"

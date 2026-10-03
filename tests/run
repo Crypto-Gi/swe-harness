@@ -84,6 +84,33 @@ printf 'module x\n' > api/go.mod
 expect "detect" 0 bash "$D" .
 has "detect" "stack: node"; has "detect" "pnpm run test"; has "detect" "pnpm run lint"; lacks "detect" "pnpm run build"
 has "detect" "browser UI framework"; has "detect" "stack: go (./api/go.mod)"; has "detect" "ci: .github/workflows/ci.yml"
+lacks "detect" "monorepo:"
+rm -rf "$tmp/m"; mkdir -p "$tmp/m/packages/a" "$tmp/m/packages/b"; cd "$tmp/m"
+printf '{ "workspaces": ["packages/*"], "scripts": { "test": "turbo run test" } }\n' > package.json
+printf '{ "scripts": {\n "test": "vitest"\n } }\n' > packages/a/package.json; cp packages/a/package.json packages/b/package.json
+printf 'packages:\n  - packages/*\n' > pnpm-workspace.yaml; echo '{}' > turbo.json; touch justfile
+expect "detect monorepo" 0 bash "$D" .
+has "detect monorepo" "monorepo: pnpm-workspace.yaml package.json:workspaces"; has "detect monorepo" "3 manifests"
+has "detect monorepo" "build tool: turborepo"; has "detect monorepo" "task runner: just"; has "detect monorepo" "./packages/a/package.json"
+rm -rf "$tmp/c"; mkdir "$tmp/c"; cd "$tmp/c"; printf '[workspace]\nmembers = ["a"]\n' > Cargo.toml; touch go.work MODULE.bazel
+expect "detect cargo/go/bazel" 0 bash "$D" .
+has "detect cargo/go/bazel" "Cargo.toml:[workspace]"; has "detect cargo/go/bazel" "go.work"; has "detect cargo/go/bazel" "build tool: bazel"
+
+# --- install.sh (core only, no network)
+h="$tmp/home"; mkdir "$h"
+out=$(HOME="$h" GIT_ALLOW_PROTOCOL=none sh "$here/install.sh" 2>&1); rc=$?
+[ "$rc" = 0 ] && ok || bad "install core: exit $rc: $out"
+for d in .claude/skills .agents/skills; do
+  [ "$(ls "$h/$d" | tr '\n' ' ')" = "swe-bootstrap swe-change swe-debug swe-review swe-verify " ] && ok || bad "install core: $d has: $(ls "$h/$d" | tr '\n' ' ')"
+done
+out=$(HOME="$h" sh "$here/install.sh" browser 2>&1); [ -f "$h/.claude/skills/swe-browser-check/SKILL.md" ] && ok || bad "install browser: $out"
+expect "install bad arg" 1 env HOME="$h" sh "$here/install.sh" nosuch
+# manifest: every entry pinned to a full commit
+while IFS='|' read -r key name repo commit path licence; do
+  case "$key" in ''|\#*) continue ;; esac
+  echo "$commit" | grep -Eq '^[0-9a-f]{40}$' && [ -n "$licence" ] && [ "${name#swe-}" != "$name" ] && ok || bad "optional/sources: entry '$key' needs a 40-hex commit, a licence and a swe- name"
+done < "$here/optional/sources"
+
 rm -rf "$tmp/e"; mkdir "$tmp/e"; expect "detect empty" 0 bash "$D" "$tmp/e"; has "detect empty" "none detected"
 
 echo "script tests: $pass passed, $fail failed"

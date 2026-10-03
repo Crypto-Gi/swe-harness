@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # Full check for this repo. Exit 0 means every part passed.
+# ./check --network also fetches the pinned optional skills into a throwaway HOME.
 set -uo pipefail
 cd "$(dirname "$0")"
 fail=0
 err() { echo "FAIL: $*"; fail=1; }
 
 # 1. Skill lint
-for d in skills/*/; do
+for d in skills/*/ optional/*/; do
   n=$(basename "$d"); f="$d/SKILL.md"
   [ -f "$f" ] || { err "$n: no SKILL.md"; continue; }
   [ "$(sed -n 1p "$f")" = "---" ] || err "$n: frontmatter must start on line 1"
@@ -23,29 +24,36 @@ for d in skills/*/; do
   grep -q "$n" README.md || err "$n: not listed in README.md"
 done
 # skills we wrote use only name + description
-for n in swe-bootstrap swe-verify swe-review swe-debug swe-browser-check; do
-  extra=$(awk '/^---$/{c++; next} c==1 && /^[A-Za-z_-]+:/ && !/^(name|description):/' "skills/$n/SKILL.md")
+for f in skills/*/SKILL.md optional/*/SKILL.md; do
+  n=$(basename "$(dirname "$f")")
+  extra=$(awk '/^---$/{c++; next} c==1 && /^[A-Za-z_-]+:/ && !/^(name|description):/' "$f")
   [ -z "$extra" ] || err "$n: extra frontmatter keys: $extra"
 done
 # bootstrap template stays small
 lines=$(wc -l < skills/swe-bootstrap/assets/AGENTS.template.md)
 [ "$lines" -le 100 ] || err "AGENTS.template.md is $lines lines (limit 100)"
 # scripts parse
-for s in skills/*/scripts/* tests/run install.sh check; do
+for s in skills/*/scripts/* tests/run check; do
   [ -f "$s" ] || continue
   case "$s" in *.cjs|*.js|*.py|*.json) continue ;; esac
   bash -n "$s" 2>/dev/null || err "$s: syntax error"
 done
+sh -n install.sh 2>/dev/null || err "install.sh: syntax error"
+[ ! -d skills/swe-security-audit ] && [ ! -d skills/swe-react ] || err "vendor skills must not be stored in this repo; they are fetched via optional/sources"
 [ "$fail" = 0 ] && echo "ok: skill lint"
 
 # 2. Script tests
 bash tests/run || fail=1
 
-# 3. Upstream validator tests (need node)
-if command -v node >/dev/null 2>&1; then
-  if (cd skills/swe-security-audit && node --test >/dev/null 2>&1); then echo "ok: security-audit validator tests"; else err "security-audit validator tests"; fi
-else
-  echo "skipped: security-audit validator tests (node not installed)"
+# 3. Optional, needs network: fetch each pinned specialist skill into a throwaway HOME
+if [ "${1:-}" = "--network" ]; then
+  h=$(mktemp -d)
+  if HOME="$h" sh ./install.sh security react >/dev/null 2>&1 \
+     && grep -q '^name: swe-security-audit$' "$h/.agents/skills/swe-security-audit/SKILL.md" \
+     && grep -q '^name: swe-react$' "$h/.claude/skills/swe-react/SKILL.md" \
+     && grep -q '^commit: ' "$h/.claude/skills/swe-react/SOURCE" \
+     && [ ! -e "$h/.claude/skills/swe-react/AGENTS.md" ] && ! grep -q "Compiled Document" "$h/.claude/skills/swe-react/SKILL.md"; then echo "ok: pinned fetch of optional skills"; else err "pinned fetch of optional skills"; fi
+  rm -rf "$h"
 fi
 
 [ "$fail" = 0 ] && echo "ALL CHECKS PASSED" || echo "CHECKS FAILED"

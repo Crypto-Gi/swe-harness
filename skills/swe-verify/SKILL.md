@@ -20,7 +20,7 @@ Done is an exit code, not a statement. Scripts are in this skill's `scripts/` fo
 
 ## Rules
 - A claim needs evidence produced after the last edit. "Should pass" and a subagent's "success" are not evidence; the command output and the diff are.
-- A bug fix needs a test that fails without the fix. Confirm it: run it red before the fix, or revert the fix, see it fail, restore.
+- A bug fix needs a test that fails without the fix. Confirm it: run it red before the fix, or revert the fix, see it fail, restore. Exception: when reproducing the bug in a test is genuinely impractical (hardware, timing, a third-party outage, production-only data), say so, state what you checked instead, and put both in the commit message. "No time" is not this exception.
 - Your task's scope limits what you change, not what you check. Run the whole check and report failures you did not cause as pre-existing; do not fix them unasked.
 - A check that cannot run is "not verified", never "passed". Say which check and why.
 - A new check or guardrail is not done until it has passed, failed on a planted violation, and passed again.

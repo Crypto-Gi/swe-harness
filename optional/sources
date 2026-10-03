@@ -1,0 +1,8 @@
+# Specialist skills fetched on request by ./install.sh <key>.
+# Nothing here is downloaded unless asked for by key. Each entry is pinned to
+# one upstream commit; to update, change the commit here after reading the
+# upstream diff. Fields are separated by "|".
+#
+# key | installed name | repository | commit | path in repository | licence
+security|swe-security-audit|https://github.com/cloudflare/security-audit-skill|c1c8a8c1471069fb0e188eeaff69b8e8db6564a8|skills/security-audit|MIT, (c) 2025-2026 Cloudflare, Inc.
+react|swe-react|https://github.com/vercel-labs/agent-skills|063bee94c3f4df8453406c830b0a7df0f2860278|skills/react-best-practices|MIT per upstream README and skill frontmatter (no LICENSE file upstream), (c) Vercel, Inc.

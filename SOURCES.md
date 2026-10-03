@@ -2,12 +2,19 @@
 
 What was taken from where. Commits are the upstream revisions read on 2026-10-03.
 
+## Fetched on request, not stored here
+
+Pinned in `optional/sources` and downloaded by `./install.sh <key>`. The installed folder gets a `SOURCE` file with the same facts.
+
+| Key | Installed as | From | Commit | Licence | Changed at install |
+|---|---|---|---|---|---|
+| `security` | `swe-security-audit` | cloudflare/security-audit-skill, `skills/security-audit/` | c1c8a8c | MIT, (c) 2025-2026 Cloudflare, Inc. | `name` in frontmatter; upstream `LICENSE` copied into the folder |
+| `react` | `swe-react` | vercel-labs/agent-skills, `skills/react-best-practices/` | 063bee9 | MIT per upstream README and frontmatter; upstream has no LICENSE file | `name` in frontmatter; compiled `AGENTS.md` and the line pointing to it removed |
+
 ## Copied
 
 | Here | From | Commit | Licence | Changes |
 |---|---|---|---|---|
-| `skills/swe-security-audit/` | cloudflare/security-audit-skill, `skills/security-audit/` | c1c8a8c | MIT, (c) 2025-2026 Cloudflare, Inc. (`LICENSE` in the folder) | `name` in frontmatter only |
-| `skills/swe-react/` | vercel-labs/agent-skills, `skills/react-best-practices/` | 063bee9 | MIT per upstream README and frontmatter; upstream has no LICENSE file (`LICENSE-NOTE.txt`) | `name` in frontmatter; dropped the compiled `AGENTS.md`, `README.md`, `metadata.json`; last line of `SKILL.md` |
 | `skills/swe-verify/references/writing-good-tests.md` | obra/superpowers, `skills/test-driven-development/writing-good-tests.md` | 8ca22db | MIT, (c) 2025 Jesse Vincent | Removed cross-references and two asides |
 
 ## Adapted
@@ -24,10 +31,11 @@ What was taken from where. Commits are the upstream revisions read on 2026-10-03
 | same | obra/superpowers, `systematic-debugging` | 8ca22db | MIT | Boundary logging; stop after three failed fixes |
 | `swe-bootstrap/assets/decisions-README.md` | mattpocock/skills, `domain-modeling/ADR-FORMAT.md` | d81f3a1 | MIT | One-paragraph format; three-condition trigger |
 | `swe-verify/scripts/test-guard` | addyosmani/agent-skills, `constraint-driven-development/references/floor-guard.md` | 1401c8b | MIT, (c) 2025 Addy Osmani | The set of bar-lowering moves and the 0/1/2 exit contract; rewritten in bash and awk |
-| `swe-browser-check/SKILL.md` | addyosmani/agent-skills, `browser-testing-with-devtools` | 1401c8b | MIT | The list of runtime checks; untrusted page content |
+| `optional/swe-browser-check/SKILL.md` | addyosmani/agent-skills, `browser-testing-with-devtools` | 1401c8b | MIT | The list of runtime checks; untrusted page content |
 | same | pbakaus/impeccable, `skill/SKILL.src.md` | e103efe | Apache-2.0 | Two-round limit; validate screenshots |
 | `swe-bootstrap/assets/AGENTS.template.md` | DietrichGebert/ponytail, `AGENTS.md` | c982cd4 | MIT | The "stop at the first that holds" ladder, the grep-callers rule, shortcut comments |
 | same | obra/superpowers, `subagent-driven-development/SKILL.md` | 8ca22db | MIT | Stop conditions; `Ruling:` format |
+| `swe-change/SKILL.md` | obra/superpowers `executing-plans`, `subagent-driven-development`; OpenAI Cookbook ExecPlans; Fission-AI/OpenSpec concepts | 8ca22db | MIT; ideas only from the latter two | Living plan with decisions and open questions; requirement-plus-scenario spec shape. The close-out step is ours |
 | `AGENTS.md` (this repo) | mattpocock/skills `writing-for-agents`; obra/superpowers `writing-skills` | d81f3a1, 8ca22db | MIT | Pruning test for instruction lines; descriptions state triggers, not workflow |
 
 ## Read and not used

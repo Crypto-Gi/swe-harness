@@ -16,7 +16,7 @@ Diff file: [DIFF_FILE]
 
 Read the diff file once. It holds the commit list, a stat summary and the full diff with surrounding context. The context lines are the changed files: do not read a changed file separately unless a hunk you must judge is cut off, and say so if you do.
 
-Do not crawl the codebase. Look outside the diff only to check a concrete risk you can name, one focused check per risk, and name both the risk and what you checked. A changed function contract, lock order or shared state is such a risk: check the call sites.
+Start from the diff, and do not crawl the codebase. Read outside the diff when the change cannot be judged without it: a changed function or API contract (read the callers), shared or global state, concurrency and lock order, a data or schema shape other code depends on, or a claim that the change fits the existing architecture. Make each such check focused, and report the risk you were checking, what you read and what you found. If you have no named risk, stay in the diff.
 
 This review is read-only. Do not change the working tree, the index or any branch. Do not spawn other agents.
 

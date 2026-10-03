@@ -28,7 +28,7 @@ All three must hold:
 
 Typical cases: the shape of the system, a technology that would take months to replace, where a boundary sits and what is deliberately excluded, a deviation from the obvious approach, a constraint the code cannot show (compliance, a contract, a budget), an alternative rejected for a non-obvious reason.
 
-Anything smaller belongs in the commit message.
+Anything smaller still deserves its reason, in the commit message of the change that made it. Records here are for the few decisions a future reader must not miss.
 
 ## Rules
 

@@ -1,13 +1,13 @@
 # swe-harness: repo guide
 
-Agent Skills for software engineering with Claude Code and Codex. `README.md` says what each skill does and how to install. `SOURCES.md` says where each borrowed piece came from.
+A lean engineering brain and harness for coding agents (Claude Code and Codex): a few skills, a few scripts, and a small amount of kept project knowledge. `README.md` says what each skill does and how to install. `SOURCES.md` says where each borrowed piece came from.
 
 ## Layout
-- `skills/<name>/SKILL.md`: one folder per skill, all prefixed `swe-`. Long material in `references/`, scripts in `scripts/`, templates in `assets/`.
-- Core: `swe-bootstrap`, `swe-verify`, `swe-review`, `swe-debug`. Optional: `swe-browser-check`, `swe-security-audit`, `swe-react`.
-- `tests/run`: self-tests for every script.
-- `check`: the full check for this repo (skill lint, script tests, upstream validator tests).
-- `install.sh`: copies skills to `~/.claude/skills` and `~/.agents/skills`.
+- `skills/<name>/SKILL.md`: the core, one folder per skill, all prefixed `swe-`: `swe-bootstrap`, `swe-change`, `swe-verify`, `swe-review`, `swe-debug`. Long material in `references/`, scripts in `scripts/`, templates in `assets/`.
+- `optional/`: specialist skills. Ours live here as folders (`swe-browser-check`). Other people's are one line each in `optional/sources` (repository, pinned commit, path, licence) and are fetched by `install.sh` on request.
+- `tests/run`: self-tests for every script and for the installer.
+- `check`: the full check for this repo. `./check --network` also fetches the pinned optional skills.
+- `install.sh`: default installs the core with no network; optional skills by name.
 
 ## Rules
 - Run `./check` before saying a change is done. It must exit 0.
@@ -16,7 +16,11 @@ Agent Skills for software engineering with Claude Code and Codex. `README.md` sa
 - Keep `SKILL.md` short: steps and rules. Write instructions, not explanations. For every line ask: would the agent get this wrong without it? If not, cut it.
 - Deterministic work goes in a script with a test in `tests/run`. Skills call scripts as `bash scripts/<name>`.
 - No always-on parts: no session hooks, no router skill, nothing a project must install to function.
-- Borrowed text keeps its attribution line and a row in `SOURCES.md`. `swe-security-audit` and `swe-react` are upstream copies: change them only when needed and note the change in `SOURCES.md`.
+- The test for every addition: does it preserve important engineering knowledge that cannot be derived from code, tests and git, or give reliable feedback a strong model cannot give itself? If not, leave it out.
+- `swe-change` stays a checklist, not a process: no tiers, gates, required documents or announcements. A small change must still read as understand, edit, verify.
+- Kept project knowledge has five homes and no more: `AGENTS.md`, `docs/decisions/`, `docs/specs/`, temporary `docs/plans/`, commit messages. Nothing that can be looked up is stored.
+- Borrowed text keeps its attribution line and a row in `SOURCES.md`.
+- Other people's skill trees are never stored here. Add them to `optional/sources` pinned to a full commit; change a pin only after reading the upstream diff, and run `./check --network`.
 - Never copy from sources whose licence forbids it (Anthropic's docx/pdf/pptx/xlsx skills) or requires share-alike (Trail of Bits, CC BY-SA).
 
 ## Changing this repo

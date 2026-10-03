@@ -24,7 +24,7 @@ Terms: a **subagent** is whatever your platform uses to run a task in a fresh co
 
 ## Rules
 - One reviewer, one pass. More reviewers produce more findings, not more truth.
-- The reviewer is read-only and does not spawn subagents.
+- The reviewer is read-only and does not spawn subagents. It starts from the diff and reads further only to validate a named risk: callers of a changed contract, shared state, concurrency, or fit with the architecture.
 - A finding needs a file:line, who or what is affected, and the concrete wrong result. "Could be cleaner" with no consequence is not a finding.
 - "Nothing found" is a valid result. Do not ask the reviewer to try harder until it invents something.
 - Security-focused review of a whole codebase is a different job: use `swe-security-audit`.
