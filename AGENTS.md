@@ -9,6 +9,7 @@ A lean engineering brain and harness for coding agents (Claude Code and Codex): 
 - `check`: the full check for this repo. `./check --network` also fetches the pinned optional skills.
 - `install.sh`: default installs the core with no network; optional skills by name. `./install.sh zip` rebuilds `zips/` (core + browser) for uploading to the Claude apps.
 - `zips/`: committed, byte-reproducible. After changing a skill, run `./install.sh zip`; `./check` fails on a stale zip.
+- `instructions.md`: the same working rules as one paste-in block for app custom instructions. `./check` fails if its key phrases drift from the AGENTS template.
 - `.github/workflows/check.yml`: runs `./check --network` on every push.
 
 ## Rules

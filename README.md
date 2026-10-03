@@ -126,6 +126,10 @@ npx skills add Crypto-Gi/swe-harness
 Run `./install.sh` from Git Bash or WSL, or copy each folder in `skills/` into `%USERPROFILE%\.claude\skills` and `%USERPROFILE%\.agents\skills`. For Claude desktop, use the zips.
 </details>
 
+### Custom instructions (optional)
+
+Want the same habits everywhere, even in apps without skills? [`instructions.md`](instructions.md) is one self-contained block you paste into your app's custom instructions: think before coding, keep it small, change surgically, prove it, and remember only what matters. It lists where to paste it for Claude Code, Codex, Claude desktop, ChatGPT and Cursor.
+
 ### Optional specialist skills
 
 Install only what a project needs. Third-party skills are downloaded on request, pinned to one upstream commit, and never stored in this repo.
@@ -196,4 +200,4 @@ Before opening a pull request:
 
 ## 📄 Licence and credits
 
-Apache-2.0, see [`LICENSE`](LICENSE). Built on ideas and text from [superpowers](https://github.com/obra/superpowers), [mattpocock/skills](https://github.com/mattpocock/skills), [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills), [Cloudflare's security-audit-skill](https://github.com/cloudflare/security-audit-skill), [ponytail](https://github.com/DietrichGebert/ponytail) and [impeccable](https://github.com/pbakaus/impeccable). Every borrowed file, its upstream commit and its licence are in [`SOURCES.md`](SOURCES.md).
+Apache-2.0, see [`LICENSE`](LICENSE). Built on ideas and text from [Karpathy-inspired coding guidelines](https://github.com/duolahypercho/andrej-karpathy-skills), [superpowers](https://github.com/obra/superpowers), [mattpocock/skills](https://github.com/mattpocock/skills), [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills), [Cloudflare's security-audit-skill](https://github.com/cloudflare/security-audit-skill), [ponytail](https://github.com/DietrichGebert/ponytail) and [impeccable](https://github.com/pbakaus/impeccable). Every borrowed file, its upstream commit and its licence are in [`SOURCES.md`](SOURCES.md).

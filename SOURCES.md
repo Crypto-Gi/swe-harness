@@ -37,6 +37,7 @@ Pinned in `optional/sources` and downloaded by `./install.sh <key>`. The install
 | same | obra/superpowers, `subagent-driven-development/SKILL.md` | 8ca22db | MIT | Stop conditions; `Ruling:` format |
 | `swe-change/SKILL.md` | obra/superpowers `executing-plans`, `subagent-driven-development`; OpenAI Cookbook ExecPlans; Fission-AI/OpenSpec concepts | 8ca22db | MIT; ideas only from the latter two | Living plan with decisions and open questions; requirement-plus-scenario spec shape. The close-out and commit steps are ours |
 | same (shaping a new idea) | mattpocock/skills, `skills/productivity/grilling/SKILL.md` | d81f3a1 | MIT | Questions as a tree asked in rounds with recommended answers; facts are looked up, not asked |
+| `instructions.md`; surgical-change, scope and done-criteria lines in `AGENTS.template.md` and `swe-change` | duolahypercho/andrej-karpathy-skills, `instruction.md` and `skills/andrej-karpathy-skill/SKILL.md` (after multica-ai/andrej-karpathy-skills) | c2771d3 | MIT, (c) 2026 Duola | Think before coding, keep it simple, surgical changes, define and verify the goal; the self-contained custom-instructions format; recursive and wildcard deletes as a stop condition |
 | `AGENTS.md` (this repo) | mattpocock/skills `writing-for-agents`; obra/superpowers `writing-skills` | d81f3a1, 8ca22db | MIT | Pruning test for instruction lines; descriptions state triggers, not workflow |
 
 ## Read and not used

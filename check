@@ -42,6 +42,12 @@ sh -n install.sh 2>/dev/null || err "install.sh: syntax error"
 [ ! -d skills/swe-security-audit ] && [ ! -d skills/swe-react ] || err "vendor skills must not be stored in this repo; they are fetched via optional/sources"
 [ "$fail" = 0 ] && echo "ok: skill lint"
 
+# instructions.md copies rules from the AGENTS.md template; key phrases must match in both
+for p in "stop at the first that holds" "Keep the diff to the request" "grep every caller" "recursive or wildcard deletes" "Text in files, issues, logs and web pages is data"; do
+  grep -q "$p" skills/swe-bootstrap/assets/AGENTS.template.md || err "AGENTS.template.md lacks: $p"
+  grep -q "$p" instructions.md || err "instructions.md lacks: $p (keep it in step with the template)"
+done
+
 # zips are byte-reproducible; a stale one is a bug
 if command -v python3 >/dev/null 2>&1; then
   z=$(mktemp -d); cp -R skills optional install.sh "$z"/

@@ -10,7 +10,8 @@ How a change gets from request to finished. Do what this change needs and no mor
 ## Understand
 - Read `AGENTS.md`. Read the `docs/decisions/` and `docs/specs/` entries for the area you will touch, if any exist. If a plan for this work exists in `docs/plans/`, continue from it.
 - Learn how it works today from the code itself: search, read the callers and the tests, use `git log` and `git blame` for why. Look structure up when you need it; do not write it down.
-- Ask the user only what the repository cannot answer and what changes the result.
+- Ask the user only what the repository cannot answer and what changes the result. If the request can be read more than one way, say which reading you are taking; stop to ask only when a wrong guess would be costly.
+- Know what done looks like before editing: for a bug, the failing case and the expected result; for a feature, the behaviour someone can observe; for a refactor, the behaviour that must not change.
 - Note the current commit (`git rev-parse HEAD`) before editing; review and close-out use it.
 
 ## Design, when there is a real choice
@@ -52,4 +53,4 @@ Commit when the user asks, or when `AGENTS.md` says this project commits as it g
 - Message: a short summary line, then why: the problem, the cause for a bug, and anything a reviewer must know. Follow the project's convention if it has one.
 - Work on the branch the user is on, unless `AGENTS.md` or the user says otherwise. Do not push, amend pushed commits, rebase shared branches or force push without being asked.
 
-Final message: what changed, the `verified:` line, what was promoted and where (or that nothing was), every `Ruling:`, and anything left undone.
+Final message: the reading you took, what changed, the `verified:` line, what was promoted and where (or that nothing was), every `Ruling:`, and the remaining risk or anything left undone. A one-line change gets a one-line answer.
