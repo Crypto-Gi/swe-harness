@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# Self-tests for every script. Each case builds a throwaway git repo.
+set -uo pipefail
+here=$(cd "$(dirname "$0")/.." && pwd)
+V="$here/skills/swe-verify/scripts/verified"
+G="$here/skills/swe-verify/scripts/test-guard"
+R="$here/skills/swe-review/scripts/review-package"
+D="$here/skills/swe-bootstrap/scripts/detect-stack"
+tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+pass=0; fail=0
+ok()  { pass=$((pass+1)); }
+bad() { fail=$((fail+1)); echo "FAIL: $*"; }
+# expect <name> <wanted exit> <command...>; output kept in $out
+expect() { local name=$1 want=$2; shift 2; out=$("$@" 2>&1); local rc=$?; [ "$rc" = "$want" ] && ok || bad "$name: exit $rc, wanted $want: $out"; }
+has() { case "$out" in *"$2"*) ok ;; *) bad "$1: output lacks '$2': $out" ;; esac; }
+lacks() { case "$out" in *"$2"*) bad "$1: output has '$2'" ;; *) ok ;; esac; }
+newrepo() { rm -rf "$tmp/r"; mkdir "$tmp/r"; cd "$tmp/r"; git init -q -b main .; git config user.email t@t; git config user.name t
+  mkdir -p src tests; echo 'def add(a,b): return a+b' > src/m.py
+  printf 'def test_add():\n    assert add(1,2) == 3\n    assert add(0,0) == 0\n' > tests/test_m.py
+  git add -A; git commit -qm base; }
+
+# --- verified
+newrepo
+expect "verified pass" 0 bash "$V" unit -- sh -c 'echo line1; echo 2 passed'
+has "verified pass" "passed at"; has "verified pass" "2 passed"
+[ -f .swe/verified.log ] && [ "$(wc -l < .swe/verified.log)" = 1 ] && ok || bad "verified: ledger should have 1 line"
+expect "verified fail" 7 bash "$V" unit -- sh -c 'echo boom; exit 7'
+has "verified fail" "NOT recorded"
+[ "$(wc -l < .swe/verified.log)" = 1 ] && ok || bad "verified: failing run must not be recorded"
+[ -z "$(git status --porcelain)" ] && ok || bad "verified: .swe must ignore itself"
+expect "verified usage" 2 bash "$V" unit
+echo x >> src/m.py; expect "verified dirty" 0 bash "$V" unit -- true; has "verified dirty" "+uncommitted"
+
+# --- test-guard
+newrepo
+expect "guard clean" 0 bash "$G" HEAD; has "guard clean" "clean"
+echo 'def sub(a,b): return a-b' >> src/m.py
+printf 'def test_sub():\n    assert sub(3,1) == 2\n' > tests/test_sub.py
+expect "guard clean with new code and test" 0 bash "$G" HEAD
+git rm -q tests/test_m.py
+expect "guard deleted test" 1 bash "$G" HEAD; has "guard deleted test" "test-deleted"
+newrepo
+printf 'def test_add():\n    assert add(1,2) == 3\n' > tests/test_m.py
+expect "guard removed assertion" 1 bash "$G" HEAD; has "guard removed assertion" "assertions-removed"
+newrepo
+printf 'def test_add():\n    assert add(1,2) == 3\n    assert add(0,0) == 0 + 0\n' > tests/test_m.py
+expect "guard edited assertion is fine" 0 bash "$G" HEAD
+newrepo
+printf 'import pytest\n@pytest.mark.skip\ndef test_add():\n    assert add(1,2) == 3\n    assert add(0,0) == 0\n' > tests/test_m.py
+expect "guard skip" 1 bash "$G" HEAD; has "guard skip" "test-skipped-or-focused"
+newrepo
+echo 'x = undefined_thing  # noqa' >> src/m.py
+expect "guard suppression" 1 bash "$G" HEAD; has "guard suppression" "checker-silenced"
+newrepo
+echo 'x = 1  # noqa  guard-ok: generated file' >> src/m.py
+expect "guard exemption" 0 bash "$G" HEAD
+newrepo
+printf 'it.only("x", () => { expect(1).toBe(1) })\n' > tests/new.test.js
+expect "guard untracked focused test" 1 bash "$G" HEAD; has "guard untracked focused test" "tests/new.test.js"
+newrepo
+expect "guard bad base" 2 bash "$G" nosuchref
+cd "$tmp"; expect "guard outside git" 2 bash "$G"
+
+# --- review-package
+newrepo; base=$(git rev-parse HEAD)
+expect "review empty" 3 bash "$R" "$base"
+echo 'def mul(a,b): return a*b' >> src/m.py; echo new > src/new.py
+expect "review worktree" 0 bash "$R" "$base"; has "review worktree" ".swe/review-"
+f=$(ls .swe/review-*worktree.diff); grep -q 'def mul' "$f" && ok || bad "review: tracked change missing"
+grep -q 'src/new.py' "$f" && ok || bad "review: untracked file missing"
+[ -z "$(git diff --cached --name-only)" ] && ok || bad "review: must not touch the index"
+git add -A; git commit -qm work; head=$(git rev-parse HEAD)
+expect "review range" 0 bash "$R" "$base" "$head"
+grep -q '## Commits' .swe/review-*"$(git rev-parse --short "$head")".diff && ok || bad "review: range file"
+expect "review reversed" 3 bash "$R" "$head" "$base"
+expect "review bad ref" 2 bash "$R" nosuchref
+expect "review usage" 2 bash "$R"
+
+# --- detect-stack
+rm -rf "$tmp/s"; mkdir -p "$tmp/s/api" "$tmp/s/.github/workflows"; cd "$tmp/s"
+printf '{\n  "scripts": {\n    "test": "vitest",\n    "lint": "eslint ."\n  },\n  "dependencies": { "next": "15" }\n}\n' > package.json
+touch pnpm-lock.yaml tsconfig.json .github/workflows/ci.yml
+printf 'module x\n' > api/go.mod
+expect "detect" 0 bash "$D" .
+has "detect" "stack: node"; has "detect" "pnpm run test"; has "detect" "pnpm run lint"; lacks "detect" "pnpm run build"
+has "detect" "browser UI framework"; has "detect" "stack: go (./api/go.mod)"; has "detect" "ci: .github/workflows/ci.yml"
+rm -rf "$tmp/e"; mkdir "$tmp/e"; expect "detect empty" 0 bash "$D" "$tmp/e"; has "detect empty" "none detected"
+
+echo "script tests: $pass passed, $fail failed"
+[ "$fail" = 0 ]

@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Write the change under review to one file a reviewer reads once: commit
+# list, stat summary and the diff with extended context.
+# Usage: review-package BASE [HEAD]
+#   BASE is the commit recorded before the work started (never HEAD~1).
+#   Without HEAD, the diff runs from BASE to the working tree, so uncommitted
+#   work is included.
+# Output: .swe/review-<base>..<head|worktree>.diff (git-ignored); prints the path.
+# Exit: 2 usage or bad ref, 3 empty range or HEAD not descended from BASE.
+# Adapted from obra/superpowers subagent-driven-development/scripts/review-package (MIT).
+set -euo pipefail
+
+if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+  echo "usage: review-package BASE [HEAD]" >&2
+  exit 2
+fi
+base=$1
+head=${2:-}
+
+root=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "review-package: not inside a git work tree" >&2; exit 2; }
+cd "$root"
+git rev-parse --verify --quiet "$base^{commit}" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
+if [ -n "$head" ]; then
+  git rev-parse --verify --quiet "$head^{commit}" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
+  git merge-base --is-ancestor "$base" "$head" || { echo "HEAD is not a descendant of BASE: $base..$head" >&2; exit 3; }
+  range=("$base..$head")
+  name="$(git rev-parse --short "$base")..$(git rev-parse --short "$head")"
+else
+  git merge-base --is-ancestor "$base" HEAD || { echo "HEAD is not a descendant of BASE: $base" >&2; exit 3; }
+  range=("$base")
+  name="$(git rev-parse --short "$base")..worktree"
+fi
+untracked() { [ -n "$head" ] || git ls-files --others --exclude-standard; }
+if git diff --quiet "${range[@]}" -- && [ -z "$(untracked)" ]; then
+  echo "nothing to review: $name is empty" >&2
+  exit 3
+fi
+
+dir="$root/.swe"
+mkdir -p "$dir"
+[ -f "$dir/.gitignore" ] || printf '*\n' > "$dir/.gitignore"
+out="$dir/review-$name.diff"
+{
+  echo "# Review package: $name"
+  echo
+  echo "## Commits"
+  git log --oneline "$base..${head:-HEAD}"
+  echo
+  echo "## Files changed"
+  git diff --stat "${range[@]}" --
+  echo
+  echo "## Diff"
+  git diff -U10 "${range[@]}" --
+  untracked | while IFS= read -r f; do git diff --no-index -U10 /dev/null "$f" || true; done
+} > "$out"
+echo "wrote $out: $(wc -c < "$out" | tr -d ' ') bytes"

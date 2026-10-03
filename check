@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Full check for this repo. Exit 0 means every part passed.
+set -uo pipefail
+cd "$(dirname "$0")"
+fail=0
+err() { echo "FAIL: $*"; fail=1; }
+
+# 1. Skill lint
+for d in skills/*/; do
+  n=$(basename "$d"); f="$d/SKILL.md"
+  [ -f "$f" ] || { err "$n: no SKILL.md"; continue; }
+  [ "$(sed -n 1p "$f")" = "---" ] || err "$n: frontmatter must start on line 1"
+  name=$(awk '/^---$/{c++; next} c==1 && /^name:/{sub(/^name:[ \t]*/,""); print; exit}' "$f")
+  [ "$name" = "$n" ] || err "$n: frontmatter name '$name' does not match folder"
+  desc=$(awk '/^---$/{c++; next} c==1 && /^description:/{sub(/^description:[ \t]*/,""); print; exit}' "$f")
+  [ -n "$desc" ] || err "$n: no description"
+  [ "${#desc}" -le 1024 ] || err "$n: description is ${#desc} chars (limit 1024)"
+  case "$n" in swe-*) ;; *) err "$n: folder must start with swe-" ;; esac
+  # every references/, scripts/ or assets/ path named in SKILL.md must exist
+  for p in $(grep -oE '(references|scripts|assets)/[A-Za-z0-9._/-]+' "$f" | sort -u); do
+    [ -e "$d/$p" ] || err "$n: SKILL.md names $p, which does not exist"
+  done
+  grep -q "$n" README.md || err "$n: not listed in README.md"
+done
+# skills we wrote use only name + description
+for n in swe-bootstrap swe-verify swe-review swe-debug swe-browser-check; do
+  extra=$(awk '/^---$/{c++; next} c==1 && /^[A-Za-z_-]+:/ && !/^(name|description):/' "skills/$n/SKILL.md")
+  [ -z "$extra" ] || err "$n: extra frontmatter keys: $extra"
+done
+# bootstrap template stays small
+lines=$(wc -l < skills/swe-bootstrap/assets/AGENTS.template.md)
+[ "$lines" -le 100 ] || err "AGENTS.template.md is $lines lines (limit 100)"
+# scripts parse
+for s in skills/*/scripts/* tests/run install.sh check; do
+  [ -f "$s" ] || continue
+  case "$s" in *.cjs|*.js|*.py|*.json) continue ;; esac
+  bash -n "$s" 2>/dev/null || err "$s: syntax error"
+done
+[ "$fail" = 0 ] && echo "ok: skill lint"
+
+# 2. Script tests
+bash tests/run || fail=1
+
+# 3. Upstream validator tests (need node)
+if command -v node >/dev/null 2>&1; then
+  if (cd skills/swe-security-audit && node --test >/dev/null 2>&1); then echo "ok: security-audit validator tests"; else err "security-audit validator tests"; fi
+else
+  echo "skipped: security-audit validator tests (node not installed)"
+fi
+
+[ "$fail" = 0 ] && echo "ALL CHECKS PASSED" || echo "CHECKS FAILED"
+exit "$fail"

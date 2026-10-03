@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Print what a repository is built with and the check commands it probably
+# uses, from manifest files only. Every command printed is a CANDIDATE: run it
+# before writing it into AGENTS.md.
+# Usage: detect-stack [DIR]   (default: current directory)
+set -uo pipefail
+cd "${1:-.}" || exit 2
+
+has() { [ -e "$1" ]; }
+say() { printf '%s\n' "$*"; }
+found=0
+
+manifests=$(find . -maxdepth 3 \( -name node_modules -o -name .git -o -name vendor -o -name target -o -name dist -o -name .venv -o -name fixtures -o -name testdata -o -name examples \) -prune -o \
+  \( -name package.json -o -name pyproject.toml -o -name requirements.txt -o -name go.mod -o -name Cargo.toml \
+     -o -name pom.xml -o -name 'build.gradle*' -o -name '*.csproj' -o -name '*.sln' -o -name Gemfile -o -name composer.json \) -print 2>/dev/null | sort)
+
+for m in $manifests; do
+  d=$(dirname "$m"); found=1
+  case "$(basename "$m")" in
+    package.json)
+      pm=npm; has "$d/pnpm-lock.yaml" && pm=pnpm; has "$d/yarn.lock" && pm=yarn; has "$d/bun.lockb" && pm=bun; has "$d/bun.lock" && pm=bun
+      say "stack: node ($m, package manager: $pm)"
+      for s in test lint typecheck check build format; do
+        grep -Eq "^[[:space:]]*\"$s\"[[:space:]]*:" "$m" && say "  candidate: (cd $d && $pm run $s)"
+      done
+      grep -Eq '"(next|react|vue|svelte|@angular/core|astro)"' "$m" && say "  note: browser UI framework present"
+      has "$d/tsconfig.json" && say "  note: TypeScript (tsconfig.json)" ;;
+    pyproject.toml|requirements.txt)
+      say "stack: python ($m)"
+      has "$d/uv.lock" && say "  note: uv project (prefix commands with 'uv run')"
+      grep -qs 'pytest' "$m" && say "  candidate: (cd $d && pytest)"
+      grep -qs 'ruff' "$m" && say "  candidate: (cd $d && ruff check . && ruff format --check .)"
+      grep -qsE 'mypy|pyright' "$m" && say "  candidate: type check with $(grep -osE 'mypy|pyright' "$m" | head -1)" ;;
+    go.mod) say "stack: go ($m)"; say "  candidate: (cd $d && go build ./... && go vet ./... && go test ./...)" ;;
+    Cargo.toml) say "stack: rust ($m)"; say "  candidate: (cd $d && cargo fmt --check && cargo clippy -- -D warnings && cargo test)" ;;
+    pom.xml) say "stack: java/maven ($m)"; say "  candidate: (cd $d && mvn -q verify)" ;;
+    build.gradle*) say "stack: java/gradle ($m)"; say "  candidate: (cd $d && ./gradlew check)" ;;
+    *.csproj|*.sln) say "stack: dotnet ($m)"; say "  candidate: (cd $d && dotnet build && dotnet test)" ;;
+    Gemfile) say "stack: ruby ($m)"; say "  candidate: (cd $d && bundle exec rake)" ;;
+    composer.json) say "stack: php ($m)"; say "  candidate: (cd $d && composer test)" ;;
+  esac
+done
+[ "$found" = 1 ] || say "stack: none detected from manifest files"
+
+has Makefile && say "makefile targets: $(grep -oE '^[A-Za-z0-9_.-]+:' Makefile | tr -d ':' | sort -u | tr '\n' ' ')"
+ci=$(ls .github/workflows/*.y*ml .gitlab-ci.yml .circleci/config.yml 2>/dev/null | tr '\n' ' ')
+[ -n "$ci" ] && say "ci: $ci(read these: CI is the best record of the real check commands)"
+has Dockerfile && say "infra: Dockerfile"
+ls ./*.tf >/dev/null 2>&1 && say "infra: terraform"
+find . -maxdepth 3 -path ./node_modules -prune -o \( -name 'migrations' -o -name 'migrate' \) -type d -print 2>/dev/null | head -3 | sed 's/^/database: migrations dir /'
+for f in AGENTS.md CLAUDE.md .cursor/rules .github/copilot-instructions.md GEMINI.md; do has "$f" && say "existing agent file: $f"; done
+for d in docs/decisions docs/adr docs/adrs doc/adr; do has "$d" && say "existing decisions: $d"; done
+git rev-parse --is-inside-work-tree >/dev/null 2>&1 && say "git: $(git rev-list --count HEAD 2>/dev/null || echo 0) commits, branch $(git branch --show-current 2>/dev/null)"
+exit 0

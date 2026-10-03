@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Run a check and record it as passed only if it exits 0.
+# Usage: verified LABEL -- COMMAND [ARGS...]
+# Full output goes to .swe/LABEL.log (git-ignored); the last 5 lines are printed.
+# Exit: the command's exit status (2 on usage error).
+# Adapted from obra/superpowers executing-plans/scripts/task-done (MIT).
+set -euo pipefail
+
+if [ $# -lt 3 ] || [ "$2" != "--" ]; then
+  echo "usage: verified LABEL -- COMMAND [ARGS...]" >&2
+  exit 2
+fi
+label=$1
+shift 2
+
+root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+dir="$root/.swe"
+mkdir -p "$dir"
+[ -f "$dir/.gitignore" ] || printf '*\n' > "$dir/.gitignore"
+log="$dir/$(printf '%s' "$label" | tr -c 'A-Za-z0-9._-' '_').log"
+
+rc=0
+"$@" > "$log" 2>&1 || rc=$?
+tail -n 5 "$log"
+if [ "$rc" -ne 0 ]; then
+  echo "verified: '$*' exited $rc; NOT recorded (full output: $log)" >&2
+  exit "$rc"
+fi
+
+last=$(grep -v '^[[:space:]]*$' "$log" | tail -n 1 || true)
+head=$(git rev-parse --short HEAD 2>/dev/null || echo no-git)
+if git status --porcelain 2>/dev/null | grep -q .; then head="$head+uncommitted"; fi
+line="$(date -u +%Y-%m-%dT%H:%MZ) $label: passed at $head: $* -> $last"
+printf '%s\n' "$line" >> "$dir/verified.log"
+echo "verified: $line"

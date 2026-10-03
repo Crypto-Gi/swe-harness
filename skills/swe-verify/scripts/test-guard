@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# Flag changes that lower the bar instead of fixing the code: deleted test
+# files, skipped or focused tests, silenced checkers, assertions removed.
+# Usage: test-guard [BASE]   (default: merge-base with origin/main, origin/master, main or master; else HEAD)
+# Compares BASE with the working tree, including untracked files.
+# A line containing "guard-ok: <reason>" is exempt.
+# Exit: 0 clean, 1 findings, 2 could not run. A 2 is never a pass.
+# Pattern adapted from addyosmani/agent-skills floor-guard (MIT).
+set -uo pipefail
+
+top=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "test-guard: not inside a git work tree" >&2; exit 2; }
+cd "$top" || exit 2
+
+base=${1:-}
+if [ -z "$base" ]; then
+  for b in origin/main origin/master main master; do
+    if git rev-parse -q --verify "$b^{commit}" >/dev/null 2>&1; then
+      base=$(git merge-base "$b" HEAD 2>/dev/null) && break
+    fi
+  done
+fi
+[ -n "$base" ] || base=HEAD
+git rev-parse -q --verify "$base^{commit}" >/dev/null 2>&1 || { echo "test-guard: bad base: $base" >&2; exit 2; }
+
+{
+  git diff --unified=0 "$base" -- || exit 2
+  git ls-files --others --exclude-standard | while IFS= read -r f; do
+    git diff --no-index --unified=0 /dev/null "$f" || true
+  done
+} | awk '
+function istest(f) {
+  return f ~ /(^|\/)(tests?|__tests__|specs?)\// || f ~ /\.(test|spec)\./ || f ~ /_test\./ || f ~ /(^|\/)test_/
+}
+function flag(rule, f, t) {
+  gsub(/^[ \t]+/, "", t)
+  print "  [" rule "] " f ": " substr(t, 1, 120)
+  n++
+}
+/^diff / { h = 1; next }
+/^@@/ { h = 0; next }
+h && /^--- / { old = substr($0, 5); sub(/^a\//, "", old); next }
+h && /^\+\+\+ / {
+  f = substr($0, 5); sub(/^b\//, "", f)
+  if (f == "/dev/null") { if (istest(old)) flag("test-deleted", old, "file deleted"); gone = 1 } else gone = 0
+  next
+}
+h { next }
+/guard-ok:/ { next }
+/^\+/ {
+  t = substr($0, 2)
+  if (t ~ /@ts-ignore|@ts-nocheck|@ts-expect-error|eslint-disable|biome-ignore|# *noqa|# *type: *ignore|pylint: *disable|\/\/ *nolint|#\[allow\(|istanbul ignore|nosemgrep|gitleaks:allow/) flag("checker-silenced", f, t)
+  if (istest(f)) {
+    if (t ~ /\.(skip|todo|only)\(|(^|[^A-Za-z_])(xit|xdescribe|fit|fdescribe)\(|@pytest\.mark\.(skip|xfail)|unittest\.skip|t\.Skip\(|#\[ignore\]|@Disabled|@Ignore/) flag("test-skipped-or-focused", f, t)
+    if (t ~ /(^|[^A-Za-z_])(expect|assert[A-Za-z_]*|should)[ (.!]|require\./) added[f]++
+  }
+}
+/^-/ {
+  t = substr($0, 2)
+  if (!gone && istest(f) && t ~ /(^|[^A-Za-z_])(expect|assert[A-Za-z_]*|should)[ (.!]|require\./) removed[f]++
+}
+END {
+  for (f in removed) if (removed[f] > added[f] + 0) {
+    print "  [assertions-removed] " f ": " removed[f] " removed, " (added[f] + 0) " added"
+    n++
+  }
+  if (n > 0) { print "test-guard: " n " finding(s). Fix the code, or mark a justified line with guard-ok: <reason>."; exit 1 }
+  print "test-guard: clean"
+}'
+rc=$?
+[ "$rc" -le 1 ] || { echo "test-guard: could not run" >&2; exit 2; }
+exit "$rc"
