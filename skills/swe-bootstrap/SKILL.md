@@ -5,7 +5,7 @@ description: Set up or refresh the engineering guide for a code repository so an
 
 # Bootstrap
 
-Writes a short `AGENTS.md`, a one-line `CLAUDE.md` and `docs/decisions/README.md`. It changes no source code. Everything else in the repository is evidence: read it, do not edit it.
+Writes a short `AGENTS.md`, a one-line `CLAUDE.md` and `docs/decisions/README.md`, and offers to write a README if there is none. It changes no source code. Everything else in the repository is evidence: read it, do not edit it.
 
 ## Modes
 - **No `AGENTS.md`** → full bootstrap below.
@@ -27,7 +27,8 @@ Writes a short `AGENTS.md`, a one-line `CLAUDE.md` and `docs/decisions/README.md
 6. **Write `CLAUDE.md`** containing exactly `@AGENTS.md`. If a `CLAUDE.md` with other content exists, show it to the user and ask before replacing.
 7. **Write `docs/decisions/README.md`** from `assets/decisions-README.md` unless the repo already keeps decision records somewhere; then point `AGENTS.md` at that folder instead.
 8. **Do not invent history.** Do not generate decision records from guesses. List up to five decisions that look deliberate and non-obvious and ask the user about each; write a record only for those the user explains, in their words.
-9. **Report:** what the project is in five lines, the commands that ran and their results, commands that failed, conflicts between existing docs and the code, and at most five questions the files could not answer, ranked by how much they change how an agent should work.
+9. **README.** If the project has none, or it is clearly out of date (wrong install steps, missing commands), offer to write or fix it from what you verified. It is for humans: what the project is, how to install, run and test it. Write it only if the user agrees.
+10. **Report:** what the project is in five lines, the commands that ran and their results, commands that failed, conflicts between existing docs and the code, and at most five questions the files could not answer, ranked by how much they change how an agent should work.
 
 ## Rules
 - Investigate first, ask second. Never ask what a file answers.

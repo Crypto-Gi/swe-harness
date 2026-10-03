@@ -150,7 +150,7 @@ Pinned skills change only when their commit in [`optional/sources`](optional/sou
 | Skill | What it owns | Say |
 |---|---|---|
 | [`swe-bootstrap`](skills/swe-bootstrap/SKILL.md) | Sets up a repo: short `AGENTS.md`, `CLAUDE.md` as `@AGENTS.md`, decision-record format | "bootstrap this project" |
-| [`swe-change`](skills/swe-change/SKILL.md) | Any code change, start to finish, ending with a close-out that keeps only what matters | "implement this", "fix this", "continue the work" |
+| [`swe-change`](skills/swe-change/SKILL.md) | Any code change, start to finish: shapes new ideas, implements, verifies, keeps only what matters, and commits with the README brought up to date | "implement this", "fix this", "continue the work" |
 | [`swe-verify`](skills/swe-verify/SKILL.md) | Done is an exit code, and tests must not have been weakened | "is it done", "verify this" |
 | [`swe-review`](skills/swe-review/SKILL.md) | A fresh context tries to refute the change | "review this" |
 | [`swe-debug`](skills/swe-debug/SKILL.md) | Reproduce with one command before theorising; stop after three failed fixes | "debug this" |
