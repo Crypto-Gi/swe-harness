@@ -152,13 +152,15 @@ Install only what a project needs. Third-party skills are downloaded on request,
 ./install.sh all
 ```
 
-### Update
+### Update, check, remove
 
 ```bash
-git pull && ./install.sh
+git pull && ./install.sh     # update
+./install.sh version         # which version is installed
+./install.sh uninstall       # remove every skill this repo installed
 ```
 
-Pinned skills change only when their commit in [`optional/sources`](optional/sources) changes.
+Pinned skills change only when their commit in [`optional/sources`](optional/sources) changes. What changed between versions is in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## 🧰 What's inside
 
@@ -224,7 +226,10 @@ Before opening a pull request:
 ```bash
 ./install.sh zip   # if you changed a skill
 ./check            # skill lint, script tests, zip freshness
+eval/run           # if you changed what a skill tells the agent to do (real sessions, costs usage)
 ```
+
+`eval/run` judges a change by what agents actually do: run it before and after. See [`eval/README.md`](eval/README.md).
 
 ## 📄 Licence and credits
 

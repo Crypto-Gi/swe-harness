@@ -105,6 +105,12 @@ for d in .claude/skills .agents/skills; do
 done
 out=$(HOME="$h" sh "$here/install.sh" browser 2>&1); [ -f "$h/.claude/skills/swe-browser-check/SKILL.md" ] && ok || bad "install browser: $out"
 expect "install bad arg" 1 env HOME="$h" sh "$here/install.sh" nosuch
+[ "$(cat "$h/.agents/skills/swe-change/.swe-harness-version")" = "$(cat "$here/VERSION")" ] && ok || bad "install: version stamp missing"
+expect "install version" 0 env HOME="$h" sh "$here/install.sh" version; has "install version" "$(cat "$here/VERSION")"
+mkdir -p "$h/.claude/skills/someone-else"
+expect "install uninstall" 0 env HOME="$h" sh "$here/install.sh" uninstall
+[ ! -e "$h/.claude/skills/swe-change" ] && [ ! -e "$h/.agents/skills/swe-browser-check" ] && ok || bad "uninstall: swe skills left behind"
+[ -d "$h/.claude/skills/someone-else" ] && ok || bad "uninstall: removed a skill it did not install"
 # manifest: every entry pinned to a full commit
 while IFS='|' read -r key name repo commit path licence; do
   case "$key" in ''|\#*) continue ;; esac

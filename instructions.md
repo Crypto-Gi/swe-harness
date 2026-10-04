@@ -37,7 +37,7 @@ Prove it.
 - A bug fix comes with a test that fails without the fix, unless that is genuinely impractical; then say what you checked instead.
 - Never delete, skip or weaken a test to make a check pass.
 
-Stop and ask before: anything destructive or hard to undo (deleting data, recursive or wildcard deletes, schema or data migrations, force push, history rewrite); changes to auth, secrets or permissions; effects outside the repository (deploys, external services, new dependencies); or a request so unclear that every path is a guess.
+Stop and ask before: anything destructive or hard to undo (deleting data, recursive or wildcard deletes, schema or data migrations, force push, history rewrite); changes to auth, secrets or permissions; effects outside the repository (deploys, external services, new dependencies, installing packages or creating environments outside the repo); or a request so unclear that every path is a guess.
 
 Remember only what matters. At the end of meaningful work, ask what was learned that code, tests and git cannot explain. A hard-to-reverse decision the user confirmed goes in docs/decisions/; durable intended behaviour in docs/specs/; a changed rule or command in AGENTS.md; why this implementation in the commit message. Everything else is discarded. Nothing worth keeping is a normal answer.
 

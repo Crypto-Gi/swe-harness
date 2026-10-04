@@ -23,9 +23,9 @@ fi
 git rev-parse -q --verify "$base^{commit}" >/dev/null 2>&1 || { echo "test-guard: bad base: $base" >&2; exit 2; }
 
 {
-  git diff --unified=0 "$base" -- || exit 2
+  git -c core.quotePath=false diff --unified=0 "$base" -- || exit 2
   git ls-files --others --exclude-standard | while IFS= read -r f; do
-    git diff --no-index --unified=0 /dev/null "$f" || true
+    git -c core.quotePath=false diff --no-index --unified=0 /dev/null "$f" || true
   done
 } | awk '
 function istest(f) {
@@ -38,9 +38,9 @@ function flag(rule, f, t) {
 }
 /^diff / { h = 1; next }
 /^@@/ { h = 0; next }
-h && /^--- / { old = substr($0, 5); sub(/^a\//, "", old); next }
+h && /^--- / { old = substr($0, 5); sub(/\t$/, "", old); sub(/^a\//, "", old); next }
 h && /^\+\+\+ / {
-  f = substr($0, 5); sub(/^b\//, "", f)
+  f = substr($0, 5); sub(/\t$/, "", f); sub(/^b\//, "", f)
   if (f == "/dev/null") { if (istest(old)) flag("test-deleted", old, "file deleted"); gone = 1 } else gone = 0
   next
 }

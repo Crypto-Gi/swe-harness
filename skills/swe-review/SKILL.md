@@ -11,9 +11,9 @@ Terms: a **subagent** is whatever your platform uses to run a task in a fresh co
 
 ## Steps
 1. **Requirements.** Collect what the change was supposed to do: the user's request in their words, the plan or spec file if one exists, and the `docs/decisions/` entries for the touched area. If you cannot state the requirements, ask before reviewing.
-2. **Package the diff.** `bash scripts/review-package <BASE> [HEAD]`, where BASE is the commit recorded before the work began (`git merge-base HEAD main` if none was recorded; never `HEAD~1`). It prints a file path. Do not read the diff into your own context.
+2. **Package the diff.** `bash scripts/review-package <BASE> [HEAD]`, where BASE is the commit recorded before the work began (`git merge-base HEAD main` if none was recorded; never `HEAD~1`). It prints a file path. Do not read the diff yourself: you wrote the change, and reading it before the reviewer reports pulls the review back toward your own view of it.
 3. **Dispatch the review.** Give the reviewer the requirements and the diff path, never your reasoning, your summary of what you built, or this conversation.
-   - **In Claude Code**, use the built-in `/code-review` for bugs: run it on the same range (`/code-review <BASE>...HEAD`; with no range it covers commits ahead of upstream plus uncommitted work). Then dispatch one reviewer with `references/reviewer-prompt.md` with FOCUS set to "requirements and tests", because `/code-review` does not check the change against what was asked or whether the tests were weakened.
+   - **In Claude Code**, run both: they check different things, so skipping either leaves a gap. Use the built-in `/code-review` for bugs: run it on the same range (`/code-review <BASE>...HEAD`; with no range it covers commits ahead of upstream plus uncommitted work). Then dispatch one reviewer with `references/reviewer-prompt.md` with FOCUS set to "requirements and tests", because `/code-review` does not check the change against what was asked or whether the tests were weakened.
    - **Elsewhere**, or if `/code-review` is unavailable, dispatch one reviewer with `references/reviewer-prompt.md` and FOCUS set to "everything".
 4. **Handle the results** from both, as one list of findings.
    - Output that does not follow the format is discarded and the review re-run fresh. Never repair a reviewer's output yourself.

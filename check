@@ -18,8 +18,10 @@ for d in skills/*/ optional/*/; do
   [ "${#desc}" -le 1024 ] || err "$n: description is ${#desc} chars (limit 1024)"
   case "$n" in swe-*) ;; *) err "$n: folder must start with swe-" ;; esac
   # every references/, scripts/ or assets/ path named in SKILL.md must exist
-  for p in $(grep -oE '(references|scripts|assets)/[A-Za-z0-9._/-]+' "$f" | sort -u); do
-    [ -e "$d/$p" ] || err "$n: SKILL.md names $p, which does not exist"
+  # paths into this skill, or into a sibling core skill written as swe-<name>/scripts/...
+  for p in $(grep -oE '(swe-[a-z-]+/)?(references|scripts|assets)/[A-Za-z0-9._/-]+' "$f" | sort -u); do
+    case "$p" in swe-*) [ -e "skills/$p" ] || err "$n: SKILL.md names $p, which does not exist in skills/" ;;
+                 *) [ -e "$d/$p" ] || err "$n: SKILL.md names $p, which does not exist" ;; esac
   done
   grep -q "$n" README.md || err "$n: not listed in README.md"
 done
@@ -33,7 +35,7 @@ done
 lines=$(wc -l < skills/swe-bootstrap/assets/AGENTS.template.md)
 [ "$lines" -le 100 ] || err "AGENTS.template.md is $lines lines (limit 100)"
 # scripts parse
-for s in skills/*/scripts/* tests/run check; do
+for s in skills/*/scripts/* tests/run check eval/run eval/fixture.sh; do
   [ -f "$s" ] || continue
   case "$s" in *.cjs|*.js|*.py|*.json) continue ;; esac
   bash -n "$s" 2>/dev/null || err "$s: syntax error"
@@ -50,7 +52,7 @@ done
 
 # zips are byte-reproducible; a stale one is a bug
 if command -v python3 >/dev/null 2>&1; then
-  z=$(mktemp -d); cp -R skills optional install.sh "$z"/
+  z=$(mktemp -d); cp -R skills optional install.sh VERSION "$z"/
   (cd "$z" && sh ./install.sh zip >/dev/null)
   for f in "$z"/zips/*.zip; do cmp -s "$f" "zips/$(basename "$f")" || err "zips/$(basename "$f") is stale: run ./install.sh zip"; done
   [ "$(ls zips | wc -l)" = "$(ls "$z"/zips | wc -l)" ] || err "zips/ holds files install.sh zip does not build"

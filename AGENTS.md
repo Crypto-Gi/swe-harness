@@ -10,6 +10,8 @@ A lean engineering brain and harness for coding agents (Claude Code and Codex): 
 - `install.sh`: default installs the core with no network; optional skills by name. `./install.sh zip` rebuilds `zips/` (core + browser) for uploading to the Claude apps.
 - `zips/`: committed, byte-reproducible. After changing a skill, run `./install.sh zip`; `./check` fails on a stale zip.
 - `instructions.md`: the same working rules as one paste-in block for app custom instructions. `./check` fails if its key phrases drift from the AGENTS template.
+- `eval/`: real headless agent sessions on a fixture project with automatic checks (`eval/run`, costs usage). Run it before and after changing what a skill tells the agent.
+- `VERSION`, `CHANGELOG.md`: bump the version and add a changelog entry with every release; tag it `v<version>`.
 - `.github/workflows/check.yml`: runs `./check --network` on every push.
 
 ## Rules
@@ -28,5 +30,6 @@ A lean engineering brain and harness for coding agents (Claude Code and Codex): 
 
 ## Changing this repo
 - Make the smallest change that does the job. No speculative options, folders or config.
-- A new rule in a skill should come from an observed failure. If a strong model already does it unprompted, leave it out.
+- A new rule in a skill should come from an observed failure, ideally one `eval/run` or a trial transcript shows. If a strong model already does it unprompted, leave it out.
+- Explain why a rule exists in the skill text instead of shouting it: models follow a reason more reliably than a MUST.
 - A new skill needs a row in the README table and a reason it cannot be a line in an existing one.

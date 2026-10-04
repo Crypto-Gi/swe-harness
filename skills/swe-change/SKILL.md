@@ -1,6 +1,6 @@
 ---
 name: swe-change
-description: The normal way to make any code change in a project, from a one-line fix to a multi-session feature. Use when the user asks to implement, add, build, change, fix, refactor, migrate, upgrade or remove something in code, or says "implement this feature", "make this change", "continue the work" or "pick up where we left off".
+description: The way to make any code change in a repository, including one-line fixes. Use it whenever the user reports a bug, pastes an error or stack trace, or asks to fix, implement, add, build, change, refactor, migrate, upgrade or remove something in code, or says "continue the work". Use it even when the fix looks obvious: it is what makes the change tested, verified and recorded instead of a quick unverified edit.
 ---
 
 # Change
@@ -11,7 +11,7 @@ How a change gets from request to finished. Do what this change needs and no mor
 - Read `AGENTS.md`. Read the `docs/decisions/` and `docs/specs/` entries for the area you will touch, if any exist. If a plan for this work exists in `docs/plans/`, continue from it.
 - Learn how it works today from the code itself: search, read the callers and the tests, use `git log` and `git blame` for why. Look structure up when you need it; do not write it down.
 - Ask the user only what the repository cannot answer and what changes the result. If the request can be read more than one way, say which reading you are taking; stop to ask only when a wrong guess would be costly.
-- Know what done looks like before editing: for a bug, the failing case and the expected result; for a feature, the behaviour someone can observe; for a refactor, the behaviour that must not change.
+- Know what done looks like before editing: for a bug, the failing case and the expected result; for a feature, the behaviour someone can observe; for a refactor, the behaviour that must not change; for "make it faster", a measurement before and after. If you cannot say what done looks like, or cannot measure, treat the request as a new idea: shape it, propose, and change nothing yet.
 - Note the current commit (`git rev-parse HEAD`) before editing; review and close-out use it.
 
 ## Design, when there is a real choice
@@ -26,8 +26,14 @@ How a change gets from request to finished. Do what this change needs and no mor
 - A bug that survives one fix attempt: `swe-debug`.
 
 ## Verify
-- `swe-verify`, always.
-- `swe-review` when the change is risky, hard to reverse, security-relevant or too large to read in one sitting.
+Do this yourself, every time, before saying the work is done. Running the tests your own way is not the same: the recorder makes "done" a fact anyone can check, and the guard catches the quiet ways a check gets made to pass. The scripts are in the `swe-verify` skill folder installed next to this one (`<skills dir>/swe-verify/scripts/`).
+1. Run the full check from `AGENTS.md` through the recorder, after your last edit: `bash <skills dir>/swe-verify/scripts/verified <label> -- <check command>`. Non-zero means not done.
+2. Run `bash <skills dir>/swe-verify/scripts/test-guard`. Fix what it flags, or say why the flagged line is the requested change. It only reads git, so it runs even when the tests cannot.
+   If the full check cannot run here (missing dependencies, no network), do not skip verification: run what you can (the new test on its own, a compile, the linter) through `verified` with a label that says what it was, such as `verified new-test-only -- ...`, and say plainly that the full check did not run.
+3. A bug fix: show the new test failing without the fix (run it before fixing, or revert, run, restore). The test is what proves the fix, so a test you never saw fail proves nothing.
+4. `swe-review` when the change is risky, hard to reverse, security-relevant, too large to read in one sitting, changes what input is accepted or rejected, or touches concurrency or shared state. The last two are easy to miss: a fix that makes bad input stop crashing can make it silently produce wrong results, and a one-word change to how code runs (sync to async, a new thread) can break code far from the diff.
+
+Writing or changing tests, or anything unusual about verification: read `swe-verify`.
 
 ## Close out
 Ask: **what did we learn here that a future engineer or agent cannot cheaply recover from the code, tests and git?** Promote only that, each piece to one place:
@@ -53,4 +59,4 @@ Commit when the user asks, or when `AGENTS.md` says this project commits as it g
 - Message: a short summary line, then why: the problem, the cause for a bug, and anything a reviewer must know. Follow the project's convention if it has one.
 - Work on the branch the user is on, unless `AGENTS.md` or the user says otherwise. Do not push, amend pushed commits, rebase shared branches or force push without being asked.
 
-Final message: the reading you took, what changed, the `verified:` line, what was promoted and where (or that nothing was), every `Ruling:`, and the remaining risk or anything left undone. A one-line change gets a one-line answer.
+Final message: the reading you took, what changed, the `verified:` line the recorder printed, what was promoted and where (or that nothing was), every `Ruling:`, and the remaining risk or anything left undone. A one-line change gets a one-line answer.

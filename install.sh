@@ -5,18 +5,41 @@
 # ./install.sh react      + swe-react          (fetched at the commit pinned in optional/sources)
 # ./install.sh all        core and every optional skill
 # ./install.sh zip        rebuild zips/ (core + browser) for uploading to the Claude apps; installs nothing
+# ./install.sh version    show the installed version
+# ./install.sh uninstall  remove every skill this repo installs
 # Skills go to ~/.claude/skills and ~/.agents/skills.
 set -e
 cd "$(dirname "$0")"
 dests="$HOME/.claude/skills $HOME/.agents/skills"
+version=$(cat VERSION)
+names="swe-bootstrap swe-change swe-verify swe-review swe-debug swe-browser-check swe-security-audit swe-react"
+
+case "${1:-}" in
+  version)
+    for dest in $dests; do
+      f="$dest/swe-change/.swe-harness-version"
+      if [ -f "$f" ]; then echo "$dest: $(cat "$f")"; else echo "$dest: not installed"; fi
+    done
+    echo "this checkout: $version"
+    exit 0 ;;
+  uninstall)
+    for dest in $dests; do
+      for n in $names; do
+        [ -d "$dest/$n" ] && rm -r "${dest:?}/${n:?}" && echo "removed $dest/$n"
+      done
+    done
+    echo "done: restart the agent"
+    exit 0 ;;
+esac
 
 put() { # put SOURCE_DIR NAME
   for dest in $dests; do
     mkdir -p "$dest"
     rm -rf "${dest:?}/$2"
     cp -R "$1" "$dest/$2"
+    echo "$version" > "$dest/$2/.swe-harness-version"
   done
-  echo "installed $2"
+  echo "installed $2 ($version)"
 }
 
 fetch() { # fetch KEY: download one pinned specialist skill and install it

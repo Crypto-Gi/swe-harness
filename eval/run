@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# eval/run [MODEL] : run every task in eval/tasks against a fresh copy of the fixture, in real headless
+# Claude Code sessions, and check the result. Costs real usage (about $1-2 per full run on Sonnet).
+# Default model: claude-sonnet-5-5, the default most people get. Needs the `claude` CLI, logged in.
+# Results: eval/results/<timestamp>/ (git-ignored). Exit 1 if any check fails.
+set -uo pipefail
+here=$(cd "$(dirname "$0")" && pwd); repo=$(dirname "$here")
+model=${1:-claude-sonnet-5-5}
+command -v claude >/dev/null || { echo "eval: the claude CLI is not installed" >&2; exit 2; }
+out="$here/results/$(date +%Y%m%d-%H%M%S)"; mkdir -p "$out"
+fail=0
+
+session() { # session NAME DIR PROMPT
+  (cd "$2" && timeout 1200 claude -p "$3" --model "$model" --output-format stream-json --verbose --max-turns 80 \
+     --setting-sources project --allowedTools "Bash Edit Write Read Glob Grep Skill Agent" > "$out/$1.jsonl" 2> "$out/$1.err")
+}
+used() { grep -q "\"name\":\"Skill\",\"input\":{\"skill\":\"$2\"" "$out/$1.jsonl"; }   # used NAME SKILL
+ran()  { grep -q "$2" "$out/$1.jsonl"; }                                               # ran NAME TEXT
+check() { # check NAME DESCRIPTION COMMAND...
+  local n=$1 d=$2; shift 2
+  if "$@"; then echo "  pass  $n: $d"; else echo "  FAIL  $n: $d"; fail=1; fi
+}
+fresh() { # fresh NAME [bootstrapped] : a new fixture copy with the core skills installed in the project
+  local d="$out/$1"; bash "$here/fixture.sh" "$d" >/dev/null
+  mkdir -p "$d/.claude/skills"; cp -R "$repo"/skills/* "$d/.claude/skills/"; echo '.claude/' >> "$d/.git/info/exclude"
+  if [ "${2:-}" = bootstrapped ]; then
+    printf '# invoicer\n\n## Commands\n- Full check: `make test`\n\n## How to work here\n- Any code change follows `swe-change`.\n' > "$d/AGENTS.md"
+    printf '@AGENTS.md\n' > "$d/CLAUDE.md"
+    (cd "$d" && git -c user.name=eval -c user.email=eval@example.com add -A && git -c user.name=eval -c user.email=eval@example.com commit -qm "agent guide")
+  fi
+  echo "$d"
+}
+unchanged() { (cd "$1" && git diff --quiet HEAD -- invoicer tests); }   # unchanged DIR : no source or test edits
+
+echo "eval: model $model, results in $out"
+
+echo "1. bootstrap"
+d=$(fresh bootstrap); session bootstrap "$d" "bootstrap this project"
+check bootstrap "swe-bootstrap fired" used bootstrap swe-bootstrap
+check bootstrap "AGENTS.md written, at most 100 lines" test -f "$d/AGENTS.md" -a "$(wc -l < "$d/AGENTS.md" 2>/dev/null || echo 999)" -le 100
+check bootstrap "CLAUDE.md is exactly @AGENTS.md" test "$(cat "$d/CLAUDE.md" 2>/dev/null)" = "@AGENTS.md"
+check bootstrap "no source code changed" unchanged "$d"
+check bootstrap "no test counts or known-bug section in AGENTS.md" bash -c "! grep -Eiq '[0-9]+ tests|^#+ *known' '$d/AGENTS.md'"
+
+echo "2. bug report, repo not bootstrapped"
+d=$(fresh bug); session bug "$d" "python3 -m invoicer sample.csv crashes with InvalidOperation. Fix it."
+check bug "swe-change fired without AGENTS.md" used bug swe-change
+check bug "fix works on sample.csv" bash -c "cd '$d' && python3 -m invoicer sample.csv >/dev/null"
+check bug "a test was added" bash -c "cd '$d' && ! git diff --quiet HEAD -- tests || git ls-files --others --exclude-standard tests | grep -q ."
+check bug "verified recorder used" test -s "$d/.swe/verified.log"
+check bug "test-guard run" ran bug "test-guard"
+check bug "not committed (nobody asked)" test "$(cd "$d" && git rev-list --count HEAD)" = 1
+
+echo "3. feature with commit"
+d=$(fresh feature bootstrapped); session feature "$d" "Add a --json flag to the CLI that prints items, subtotal and total as JSON. Commit it when done."
+check feature "swe-change fired" used feature swe-change
+check feature "one new commit" test "$(cd "$d" && git rev-list --count HEAD)" = 3
+check feature "README updated in that commit" bash -c "cd '$d' && git show --name-only HEAD | grep -qx README.md"
+check feature "commit message has a body (the why)" bash -c "cd '$d' && [ \$(git log -1 --format=%b | grep -c .) -ge 1 ]"
+check feature "verified recorder used" test -s "$d/.swe/verified.log"
+
+echo "4. vague performance request"
+d=$(fresh perf bootstrapped); session perf "$d" "invoicer feels slow, make it faster"
+check perf "no code changed without a measurement" bash -c "cd '$d' && git diff --quiet HEAD -- invoicer || grep -qiE 'baseline|before:|measured|timeit|time ' '$out/perf.jsonl'"
+
+echo "5. review"
+d=$(fresh review bootstrapped)
+(cd "$d" && sed -i 's/lstrip("\$"))/lstrip("$").replace(",", ""))/' invoicer/core.py && git -c user.name=eval -c user.email=eval@example.com commit -qam "Accept thousands separators")
+session review "$d" "Review my last commit before I push it."
+check review "swe-review fired" used review swe-review
+check review "found the silent misparse of decimal commas" bash -c "grep -Eiq '12,50|1,25|decimal comma|european|silently' '$out/review.jsonl'"
+check review "changed nothing" bash -c "cd '$d' && git diff --quiet HEAD"
+
+grep -h '"type":"result"' "$out"/*.jsonl | python3 -c "import sys,json; print('cost: \$%.2f' % sum(json.loads(l).get('total_cost_usd') or 0 for l in sys.stdin))"
+[ "$fail" = 0 ] && echo "eval: all checks passed" || echo "eval: some checks failed (see $out)"
+exit "$fail"
