@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+- `swe-review` runs only when the user explicitly asks. It is no longer started for risky changes, by `swe-change`, `swe-verify`, the pointer or the AGENTS template, and instructions like "always test and double-check" do not start it. For a change touching security, money or data that could be lost, the final message carries one line saying a review is available; otherwise review is not mentioned. Sonnet 5.5: a security fix with that instruction cost $0.37-0.44 with no review (was $0.69-0.96 with the automatic one; plain Sonnet $0.37), 22/22 on the hidden checks either way.
+- A plain review request runs one reviewer; "thorough review" adds Claude Code's built-in `code-review`.
+- `eval/run` fails if a review starts unasked or a plain review runs two reviewers. Sonnet 5.5: 30 of 30.
+
 ## 0.6.0 (2026-10-04)
 From A/B trials in isolated Sonnet 5.5 sessions (plain versus harness, hidden graders).
 - `install.sh` merges `pointer.md`, four lines naming when each skill applies, into `~/.claude/CLAUDE.md` and (if present) `~/.codex/AGENTS.md`; `uninstall` removes only that block. Sonnet 5.5 trials: skills fired on 7 of 11 prompts without it, 11 of 11 with it, and not on a plain question either way.

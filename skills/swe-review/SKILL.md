@@ -1,6 +1,6 @@
 ---
 name: swe-review
-description: Independent review of a code change by a fresh context that tries to refute it. Use when the user says "review this", "review my changes", "check this before I merge", "second opinion", or before finishing a change that is risky, hard to reverse, security-relevant, or too large to read in one sitting. Also use to re-check after review findings were fixed.
+description: Independent review of a code change by a fresh context that tries to refute it. Use only when the user explicitly asks for one, such as "review this", "review my changes", "check this before I merge", "second opinion" or "thorough review", and to re-check fixes made in that review. Never start it on your own, not even for risky changes or when instructions say to test or check work: a review costs about as much as the change, so the user decides when one is worth it.
 ---
 
 # Review
@@ -13,8 +13,8 @@ Terms: a **subagent** is whatever your platform uses to run a task in a fresh co
 1. **Requirements.** Collect what the change was supposed to do: the user's request in their words, the plan or spec file if one exists, and the `docs/decisions/` entries for the touched area. If you cannot state the requirements, ask before reviewing.
 2. **Package the diff.** `bash scripts/review-package <BASE> [HEAD]`, where BASE is the commit recorded before the work began (`git merge-base HEAD main` if none was recorded; never `HEAD~1`). It prints a file path. Do not read the diff yourself: you wrote the change, and reading it before the reviewer reports pulls the review back toward your own view of it.
 3. **Dispatch the review.** Give the reviewer the requirements and the diff path, never your reasoning, your summary of what you built, or this conversation.
-   - **In Claude Code**, run both: they check different things, and in trials skipping the built-in one let a silent money bug ship. Invoke the built-in `code-review` skill (Skill tool, or `/code-review <BASE>...HEAD`) for bugs. Then dispatch one reviewer with `references/reviewer-prompt.md` with FOCUS set to "requirements and tests", because `code-review` does not check the change against what was asked or whether the tests were weakened.
-   - **Elsewhere**, or if `/code-review` is unavailable, dispatch one reviewer with `references/reviewer-prompt.md` and FOCUS set to "everything".
+   - **Default:** one reviewer with `references/reviewer-prompt.md` and FOCUS set to "everything". It covers bugs, the requirements and the tests in one pass, at about half the cost of two reviewers.
+   - **When the user asks for a thorough or deep review, in Claude Code:** also invoke the built-in `code-review` skill (Skill tool, or `/code-review <BASE>...HEAD`) on the same range, and set our reviewer's FOCUS to "requirements and tests". The two find different bugs, so the second pass is worth it before a release or on money and security code.
 4. **Handle the results** from both, as one list of findings.
    - Output that does not follow the format is discarded and the review re-run fresh. Never repair a reviewer's output yourself.
    - Put every finding, including those from `code-review`, through the tiers in `references/reviewer-prompt.md` (Ranking): reach, silent or loud, damage. The tier follows from those facts, not from the label a reviewer gave it.

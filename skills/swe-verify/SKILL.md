@@ -24,7 +24,7 @@ Done is an exit code, not a statement. Scripts are in this skill's `scripts/` fo
 - Your task's scope limits what you change, not what you check. Run the whole check and report failures you did not cause as pre-existing; do not fix them unasked.
 - A check that cannot run is "not verified", never "passed". Say which check and why.
 - A new check or guardrail is not done until it has passed, failed on a planted violation, and passed again.
-- UI changes: also use `swe-browser-check`. Risky or large changes: also use `swe-review`.
+- UI changes: also use `swe-browser-check`.
 - A runnable app whose change tests cannot show (a CLI, a server, a page): in Claude Code, tell the user `/verify` will build, run and observe it; it runs only when they invoke it.
 
 ## Writing or changing tests

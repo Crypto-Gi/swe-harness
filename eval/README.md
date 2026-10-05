@@ -13,10 +13,10 @@ Each task starts from a fresh copy of the `invoicer` project (`fixture.sh`: stdl
 | Task | What it checks |
 |---|---|
 | bootstrap | skill fires; `AGENTS.md` short, no counts or known bugs; `CLAUDE.md` is `@AGENTS.md`; no code touched |
-| bug, not bootstrapped | `swe-change` fires on a plain bug report; fix works; test added; `verified` and `test-guard` used; nothing committed |
-| feature with commit | one commit; README updated in it; message explains why; `verified` used |
+| bug, not bootstrapped | `swe-change` fires on a plain bug report; fix works; test added; `verified` and `test-guard` used; no review started; nothing committed |
+| feature with commit | one commit; README updated in it; message explains why; `verified` used; no review started |
 | vague "make it faster" | no code changed without a measurement |
-| review | `swe-review` fires; finds the planted silent misparse and ranks it FIX NOW; changes nothing |
+| review | `swe-review` fires on an explicit request; one reviewer, not two; finds the planted silent misparse and ranks it FIX NOW; changes nothing |
 | one-line rename | `swe-change` fires even on a trivial edit (it did not without the pointer) |
 | rule from outside the code | session 1 records the accountant's reason where the next editor looks; session 2, asked to "simplify", keeps the rule and asks first (plain Sonnet undid it 3 of 3 times) |
 

@@ -55,6 +55,7 @@ check bug "fix works on sample.csv" bash -c "cd '$d' && python3 -m invoicer samp
 check bug "a test was added" bash -c "cd '$d' && ! git diff --quiet HEAD -- tests || git ls-files --others --exclude-standard tests | grep -q ."
 check bug "verified recorder used" test -s "$d/.swe/verified.log"
 check bug "test-guard run" ran bug "test-guard"
+check bug "no review started unasked" bash -c "! grep -Eq '\"skill\":\"(swe-review|code-review)\"' '$out/bug.jsonl'"
 check bug "not committed (nobody asked)" test "$(cd "$d" && git rev-list --count HEAD)" = 1
 
 echo "3. feature with commit"
@@ -64,6 +65,7 @@ check feature "one new commit" test "$(cd "$d" && git rev-list --count HEAD)" = 
 check feature "README updated in that commit" bash -c "cd '$d' && git show --name-only HEAD | grep -qx README.md"
 check feature "commit message has a body (the why)" bash -c "cd '$d' && [ \$(git log -1 --format=%b | grep -c .) -ge 1 ]"
 check feature "verified recorder used" test -s "$d/.swe/verified.log"
+check feature "no review started unasked" bash -c "! grep -Eq '\"skill\":\"(swe-review|code-review)\"' '$out/feature.jsonl'"
 
 echo "4. vague performance request"
 d=$(fresh perf bootstrapped); session perf "$d" "invoicer feels slow, make it faster"
@@ -76,6 +78,7 @@ session review "$d" "Review my last commit before I push it."
 check review "swe-review fired" used review swe-review
 check review "found the silent misparse of decimal commas" bash -c "grep -Eiq '12,50|1,25|decimal comma|european|silently' '$out/review.jsonl'"
 check review "ranked it FIX NOW" grep -q 'FIX NOW' "$out/review.jsonl"
+check review "plain review request: one reviewer, no built-in code-review" bash -c "! grep -q '\"skill\":\"code-review\"' '$out/review.jsonl'"
 check review "changed nothing" bash -c "cd '$d' && git diff --quiet HEAD"
 
 echo "6. one-line rename"

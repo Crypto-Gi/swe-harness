@@ -15,7 +15,7 @@ flowchart LR
     U(["You: implement this"]) --> C
     subgraph core ["Core skills"]
         C["swe-change<br/>understand, design, implement"] --> V["swe-verify<br/>an exit code, not a claim"]
-        V -->|risky or large| R["swe-review<br/>fresh eyes try to refute it"]
+        V -.->|when you ask| R["swe-review<br/>fresh eyes try to refute it"]
         C -.->|bug survives a fix| D["swe-debug<br/>reproduce first"]
     end
     V --> K{"Close out: what can't<br/>code, tests and git explain?"}
@@ -40,7 +40,7 @@ The usual fixes are heavy: spec frameworks with phase gates, memory databases, a
 | | What you get | How |
 |---|---|---|
 | ✅ | Proof of done | A script records a pass only when the check exits 0 after the last edit |
-| 🔍 | Independent review | A fresh context gets the diff and the requirements, never the author's reasoning |
+| 🔍 | Independent review, when you ask | A fresh context gets the diff and the requirements, never the author's reasoning |
 | 🛡️ | No quiet cheating | A guard flags deleted tests, skipped tests and silenced linters |
 | 📌 | Memory that stays small | At the end of a change, keep only what code, tests and git can't explain |
 
@@ -57,7 +57,7 @@ Isolated Claude Code sessions on Sonnet 5.5, plain versus with swe-harness insta
 | Regression test for a bug fix, seen failing first | sometimes added, not seen failing in any run | added, and seen failing before the fix |
 | Vague idea ("an app for my habits") | built an untested guess | one round of questions with recommended answers |
 | Correctness on spec'd builds, security fixes and reviews | full marks | full marks |
-| Cost | 1× | about 1.5× on small changes, up to 4× on long jobs with review |
+| Cost | 1× | about 1.2–2× per change; a review, which runs only when you ask, roughly doubles that task |
 
 The harness does not make a strong model write more correct code; it makes the work proven, reviewed and remembered. `eval/run` repeats the core of these trials; `EVAL_ARM=without eval/run` is the baseline.
 
@@ -79,7 +79,7 @@ You get a short `AGENTS.md` whose check commands were actually run, a one-line `
 add rate limiting to the login endpoint
 ```
 
-`swe-change` takes it from there: understand, implement, verify, review if it is risky, and file anything worth remembering.
+`swe-change` takes it from there: understand, implement, verify, and file anything worth remembering. Say "review this" when you want a fresh pair of eyes; it never reviews on its own.
 
 ## 📦 Install
 
@@ -184,7 +184,7 @@ Pinned skills change only when their commit in [`optional/sources`](optional/sou
 | [`swe-bootstrap`](skills/swe-bootstrap/SKILL.md) | Sets up a repo: short `AGENTS.md`, `CLAUDE.md` as `@AGENTS.md`, decision-record format | "bootstrap this project" |
 | [`swe-change`](skills/swe-change/SKILL.md) | Any code change, start to finish: shapes new ideas, implements, verifies, keeps only what matters, and commits with the README brought up to date | "implement this", "fix this", "continue the work" |
 | [`swe-verify`](skills/swe-verify/SKILL.md) | Done is an exit code, and tests must not have been weakened | "is it done", "verify this" |
-| [`swe-review`](skills/swe-review/SKILL.md) | A fresh context tries to refute the change; uses Claude Code's `/code-review` where available | "review this" |
+| [`swe-review`](skills/swe-review/SKILL.md) | Only when you ask: a fresh context tries to refute the change. "Thorough review" adds Claude Code's `/code-review` | "review this", "thorough review" |
 | [`swe-debug`](skills/swe-debug/SKILL.md) | Reproduce with one command before theorising; stop after three failed fixes | "debug this" |
 
 **Where project knowledge lives**, and nowhere else:
@@ -212,7 +212,7 @@ You don't list built-in skills anywhere: each app shows its own skills to the mo
 
 | Claude Code built-in | How the harness uses it |
 |---|---|
-| `/code-review` | `swe-review` runs it for bug-finding, then adds what it doesn't check: the change against what you asked for, weakened tests, and a bounded fix loop |
+| `/code-review` | A thorough `swe-review` runs it for bug-finding, then adds what it doesn't check: the change against what you asked for, weakened tests, and a bounded fix loop |
 | `/verify`, `/run` | `swe-verify` proves checks pass; `/verify` (you run it) watches the app work. `swe-browser-check` uses `/run` to launch the page |
 | `/security-review` | Use it for everyday changes; `swe-security-audit` is for a full codebase audit |
 | `/simplify` | Use it to clean up over-built code; the harness has no duplicate |

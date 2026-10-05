@@ -25,7 +25,7 @@ Each was run on {{DATE}}. No counts, timings or known bugs here: they change wit
 
 ## Done
 - Work is done when the full check exits 0 after your last edit. Show the command and its last lines (`swe-verify`).
-- A change that is risky, hard to reverse or too large to read in one sitting gets a fresh-context review (`swe-review`).
+- A fresh-context review (`swe-review`) runs only when the user asks for one.
 - A bug that survives one fix attempt: `swe-debug`.
 
 ## Where knowledge lives
