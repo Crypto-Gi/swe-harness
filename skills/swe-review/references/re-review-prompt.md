@@ -8,7 +8,7 @@ You are re-checking one fix round. An earlier review produced findings and the a
 
 ## Findings under verification
 
-[FINDINGS: the Critical and Important findings from the previous review, copied verbatim, one per bullet]
+[FINDINGS: the FIX NOW and FIX IF SMALL findings that were fixed, copied verbatim, one per bullet]
 
 ## The fix
 
@@ -29,12 +29,12 @@ FINDINGS
 - <finding one-liner> — ADDRESSED | NOT ADDRESSED — <file:line evidence>
 
 NEW BREAKAGE IN THE FIX
-- [Critical|Important|Minor] <file:line> — <what the fix broke>
+- [FIX NOW|FIX IF SMALL|NOTE] <file:line> — <what the fix broke> — trigger: <input> → <wrong result>
 
 OUT OF SCOPE
 - <observation>
 
-ROUND: all addressed, no new Critical/Important | findings remain open: <list>
+ROUND: all addressed, no new FIX NOW | findings remain open: <list>
 ```
 
 "Attempted" is not addressed: the specific defect must no longer exist. Write "none" under a heading that has nothing.

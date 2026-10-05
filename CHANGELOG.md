@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- `swe-review` ranks findings by three stated facts (reach, silent or loud, damage) into FIX NOW, FIX IF SMALL or NOTE, instead of Critical/Important/Minor. A silent wrong result on valid input is always FIX NOW; FIX NOW needs a concrete trigger input; the author can change a tier only by disproving a fact with evidence; an open FIX NOW leads the final message. Built-in `code-review` is a named step in Claude Code. From a trial where a silent misparse was left as "minor" and `/code-review` was skipped.
+
 ## 0.5.0 (2026-10-04)
 Changes from trials with Sonnet 5.5 on a small Python project and on a two-service FastAPI/MCP repository.
 - `swe-change` description now fires on plain bug reports even before a repo is bootstrapped (before: no skill fired).

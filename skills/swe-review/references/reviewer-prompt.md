@@ -31,7 +31,7 @@ This review is read-only. Do not change the working tree, the index or any branc
 - **Tests.** Do the changed tests fail if the behaviour breaks? Flag expected values computed by the code under test, assertions on mocks, and tests that can only fail by crashing.
 - **Lowered bar.** Deleted or skipped tests, silenced checkers, weakened assertions, stubs.
 
-Any explanation in commit messages or comments ("kept simple on purpose", "out of scope") is the author grading their own work. Judge the code. A stated rationale never lowers a finding's severity.
+Any explanation in commit messages or comments ("kept simple on purpose", "out of scope") is the author grading their own work. Judge the code. A stated rationale never lowers a finding's tier.
 
 A finding needs all three: a file:line, who or what is affected, and the concrete wrong result. A missing best practice with no affected party is not a finding. If nothing survives that test, say so; a clean result is a valid result.
 
@@ -39,13 +39,21 @@ If something cannot be judged from the diff, do not guess and do not go searchin
 
 Run a test only when reading the code raises a specific doubt no existing run answers, and then one focused test, never the whole suite.
 
-## Severity
+## Ranking
 
-- **Critical**: data loss, security hole, or the main requirement does not work.
-- **Important**: this change cannot be trusted until fixed: incorrect or fragile behaviour, a missed requirement, a test that asserts nothing, swallowed errors.
-- **Minor**: everything else. Polish and "coverage could be broader" are Minor.
+Do not grade by how bad a finding feels. Establish three facts, then the tier follows from them.
 
-If you cannot state the concrete damage, the severity is lower than it feels.
+- **Reach**: what triggers it. `normal use` | `valid but unusual input` | `attacker input` | `unreachable` (only through misuse of internal code, or speculative).
+- **Visibility**: `silent` (the result is wrong but looks right) or `loud` (crash, error, failing check).
+- **Damage**: `money/data wrong or lost` | `security` (someone gets access, data or control they should not have) | `requirement broken` (a requested behaviour or a decision record) | `tests weakened` | `failure is confusing` | `cost` | `maintainability`.
+
+Tier, first rule that matches:
+
+1. **FIX NOW**: reachable (any reach except `unreachable`) and the damage is money/data, security, requirement broken or tests weakened. A silent wrong result on valid input is always here, even if it looks like an edge case: nobody will notice it until it has hurt someone.
+2. **FIX IF SMALL**: reachable, loud, and the damage is a confusing failure or a cost; or a test that cannot fail.
+3. **NOTE**: unreachable, cosmetic, style, maintainability, "could be broader".
+
+A FIX NOW finding must give the concrete input or sequence that triggers it and the wrong result it produces. If you cannot give one, it is not FIX NOW. List findings in order: FIX NOW first, and within a tier, silent before loud and wider reach first.
 
 ## Output
 
@@ -58,7 +66,7 @@ REQUIREMENTS
 - met | missing | extra | misunderstood: <requirement, quoted> — <file:line evidence>
 
 FINDINGS
-- [Critical|Important|Minor] <file:line> — <what is wrong> — <who or what is affected and the wrong result> — <fix, if not obvious>
+- [FIX NOW|FIX IF SMALL|NOTE] <file:line> — <what is wrong> — reach: <…>, <silent|loud>, damage: <…> — trigger: <input or sequence> → <wrong result> — <fix, if not obvious>
 
 CANNOT VERIFY
 - <what> — <the missing fact> — <the check that would settle it>
