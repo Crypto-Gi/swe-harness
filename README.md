@@ -68,7 +68,7 @@ add rate limiting to the login endpoint
 
 ## 📦 Install
 
-`./install.sh` copies the five core skills into `~/.claude/skills` and `~/.agents/skills`. It needs no network.
+`./install.sh` copies the five core skills into `~/.claude/skills` and `~/.agents/skills`, and adds the four lines of [`pointer.md`](pointer.md) to `~/.claude/CLAUDE.md` (and to `~/.codex/AGENTS.md` if you use Codex) as a marked block. The pointer is what makes the skills load: in trials with Sonnet 5.5 the skills fired on 7 of 11 everyday prompts without it and 11 of 11 with it. Your own lines in those files are kept. It needs no network.
 
 <details open>
 <summary><b>Claude Code</b> (terminal, IDE, desktop Code tab)</summary>
@@ -90,7 +90,7 @@ These apps take skills as uploads, one zip per skill. Ready-made zips are in [`z
 2. In the app: **Customize → Skills → + → Upload a skill**, and pick the zip.
 3. Repeat for `swe-bootstrap`, `swe-verify`, `swe-review` and `swe-debug`, plus `swe-browser-check` if you build web UIs.
 
-The scripts inside need a session that can run commands on your project files.
+The scripts inside need a session that can run commands on your project files. Paste [`pointer.md`](pointer.md) into your custom instructions too, so the skills load when they should.
 </details>
 
 <details>
@@ -112,7 +112,7 @@ git clone https://github.com/Crypto-Gi/swe-harness && cd swe-harness
 ./install.sh
 ```
 
-Both read skills from `~/.agents/skills` and project rules from `AGENTS.md`, root and nested, with no setup. Devin Desktop also reads `~/.claude/skills` when its Claude Code compatibility is on. For the cloud agent at app.devin.ai, commit the skills into the repository under `.agents/skills/`, or add them as a Devin plugin.
+Both read skills from `~/.agents/skills` and project rules from `AGENTS.md`, root and nested, with no setup. Add [`pointer.md`](pointer.md) to `~/.config/devin/AGENTS.md` so the skills load reliably. Devin Desktop also reads `~/.claude/skills` when its Claude Code compatibility is on. For the cloud agent at app.devin.ai, commit the skills into the repository under `.agents/skills/`, or add them as a Devin plugin.
 </details>
 
 <details>
@@ -157,7 +157,7 @@ Install only what a project needs. Third-party skills are downloaded on request,
 ```bash
 git pull && ./install.sh     # update
 ./install.sh version         # which version is installed
-./install.sh uninstall       # remove every skill this repo installed
+./install.sh uninstall       # remove every skill this repo installed, and the pointer block
 ```
 
 Pinned skills change only when their commit in [`optional/sources`](optional/sources) changes. What changed between versions is in [`CHANGELOG.md`](CHANGELOG.md).
@@ -210,7 +210,7 @@ Keep the number of installed skills small: the skill list gets about 1% of the c
 
 ## 🚫 Not included, on purpose
 
-- No hooks, router skill, or anything always loaded beyond skill descriptions
+- No hooks, router skill, or anything always loaded beyond skill descriptions and the four-line pointer
 - No stored code map, index, graph or wiki
 - No tiers, phase gates, task tracker, personas or agent teams
 - No language packs: a language needs its check commands, which bootstrap finds and runs

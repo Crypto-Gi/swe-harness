@@ -7,12 +7,37 @@
 # ./install.sh zip        rebuild zips/ (core + browser) for uploading to the Claude apps; installs nothing
 # ./install.sh version    show the installed version
 # ./install.sh uninstall  remove every skill this repo installs
-# Skills go to ~/.claude/skills and ~/.agents/skills.
+# Skills go to ~/.claude/skills and ~/.agents/skills. pointer.md is merged, as a marked block, into
+# ~/.claude/CLAUDE.md and (if ~/.codex exists) ~/.codex/AGENTS.md: in trials, skills alone fired on
+# 7 of 11 prompts and 11 of 11 with the pointer. Uninstall removes the block and nothing else.
 set -e
 cd "$(dirname "$0")"
 dests="$HOME/.claude/skills $HOME/.agents/skills"
 version=$(cat VERSION)
 names="swe-bootstrap swe-change swe-verify swe-review swe-debug swe-browser-check swe-security-audit swe-react"
+start='<!-- swe-harness:start (added by swe-harness install.sh; ./install.sh uninstall removes it) -->'
+end='<!-- swe-harness:end -->'
+
+pointer_files() {
+  echo "$HOME/.claude/CLAUDE.md"
+  if [ -d "$HOME/.codex" ]; then echo "$HOME/.codex/AGENTS.md"; fi
+}
+strip_block() { # strip_block FILE : print FILE without the swe-harness block
+  awk '/^<!-- swe-harness:start/ {skip=1} !skip {print} /^<!-- swe-harness:end/ {skip=0}' "$1"
+}
+pointer() { # pointer add|remove
+  for f in $(pointer_files); do
+    rest=""; [ -f "$f" ] && rest=$(strip_block "$f")
+    if [ "$1" = add ]; then
+      mkdir -p "$(dirname "$f")"
+      { if [ -n "$rest" ]; then printf '%s\n\n' "$rest"; fi; echo "$start"; cat pointer.md; echo "$end"; } > "$f.swe-tmp" && mv "$f.swe-tmp" "$f"
+      echo "pointer block in $f"
+    elif [ -f "$f" ] && grep -q '^<!-- swe-harness:start' "$f"; then
+      if [ -n "$(printf '%s' "$rest" | tr -d '[:space:]')" ]; then printf '%s\n' "$rest" > "$f"; else rm "$f"; fi
+      echo "removed pointer block from $f"
+    fi
+  done
+}
 
 case "${1:-}" in
   version)
@@ -28,6 +53,7 @@ case "${1:-}" in
         [ -d "$dest/$n" ] && rm -r "${dest:?}/${n:?}" && echo "removed $dest/$n"
       done
     done
+    pointer remove
     echo "done: restart the agent"
     exit 0 ;;
 esac
@@ -103,4 +129,5 @@ for arg in "$@"; do
     *) echo "usage: $0 [browser] [security] [react] [all] | $0 zip" >&2; exit 1 ;;
   esac
 done
+pointer add
 echo "done: restart the agent to load the skills"

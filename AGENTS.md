@@ -9,6 +9,7 @@ A lean engineering brain and harness for coding agents (Claude Code and Codex): 
 - `check`: the full check for this repo. `./check --network` also fetches the pinned optional skills.
 - `install.sh`: default installs the core with no network; optional skills by name. `./install.sh zip` rebuilds `zips/` (core + browser) for uploading to the Claude apps.
 - `zips/`: committed, byte-reproducible. After changing a skill, run `./install.sh zip`; `./check` fails on a stale zip.
+- `pointer.md`: the four lines `install.sh` merges into `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md` so the skills load; `uninstall` removes them.
 - `instructions.md`: the same working rules as one paste-in block for app custom instructions. `./check` fails if its key phrases drift from the AGENTS template.
 - `eval/`: real headless agent sessions on a fixture project with automatic checks (`eval/run`, costs usage). Run it before and after changing what a skill tells the agent.
 - `VERSION`, `CHANGELOG.md`: bump the version and add a changelog entry with every release; tag it `v<version>`.
@@ -20,10 +21,10 @@ A lean engineering brain and harness for coding agents (Claude Code and Codex): 
 - The `description` says when the skill fires: what it does plus the phrases a user would say. It never summarises the steps; an agent that reads a workflow in the description follows that and skips the body.
 - Keep `SKILL.md` short: steps and rules. Write instructions, not explanations. For every line ask: would the agent get this wrong without it? If not, cut it.
 - Deterministic work goes in a script with a test in `tests/run`. Skills call scripts as `bash scripts/<name>`.
-- No always-on parts: no session hooks, no router skill, nothing a project must install to function.
+- No always-on parts: no session hooks, no router skill, nothing a project must install to function. The one exception is `pointer.md`, four lines the installer puts in the user's instructions file, because without it the skills fired on 7 of 11 trial prompts. Keep it at four lines.
 - The test for every addition: does it preserve important engineering knowledge that cannot be derived from code, tests and git, or give reliable feedback a strong model cannot give itself? If not, leave it out.
 - `swe-change` stays a checklist, not a process: no tiers, gates, required documents or announcements. A small change must still read as understand, edit, verify.
-- Kept project knowledge has five homes and no more: `AGENTS.md`, `docs/decisions/`, `docs/specs/`, temporary `docs/plans/`, commit messages. Nothing that can be looked up is stored.
+- Kept project knowledge has five homes and no more: `AGENTS.md`, `docs/decisions/`, `docs/specs/`, temporary `docs/plans/`, commit messages. A rule from outside the code also gets a one-line comment where the code enforces it, because that is where the next editor looks. Nothing that can be looked up is stored.
 - Borrowed text keeps its attribution line and a row in `SOURCES.md`.
 - Other people's skill trees are never stored here. Add them to `optional/sources` pinned to a full commit; change a pin only after reading the upstream diff, and run `./check --network`.
 - Never copy from sources whose licence forbids it (Anthropic's docx/pdf/pptx/xlsx skills) or requires share-alike (Trail of Bits, CC BY-SA).

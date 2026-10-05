@@ -97,7 +97,7 @@ expect "detect cargo/go/bazel" 0 bash "$D" .
 has "detect cargo/go/bazel" "Cargo.toml:[workspace]"; has "detect cargo/go/bazel" "go.work"; has "detect cargo/go/bazel" "build tool: bazel"
 
 # --- install.sh (core only, no network)
-h="$tmp/home"; mkdir "$h"
+h="$tmp/home"; mkdir -p "$h/.claude"; printf '# mine\nkeep me\n' > "$h/.claude/CLAUDE.md"
 out=$(HOME="$h" GIT_ALLOW_PROTOCOL=none sh "$here/install.sh" 2>&1); rc=$?
 [ "$rc" = 0 ] && ok || bad "install core: exit $rc: $out"
 for d in .claude/skills .agents/skills; do
@@ -107,10 +107,17 @@ out=$(HOME="$h" sh "$here/install.sh" browser 2>&1); [ -f "$h/.claude/skills/swe
 expect "install bad arg" 1 env HOME="$h" sh "$here/install.sh" nosuch
 [ "$(cat "$h/.agents/skills/swe-change/.swe-harness-version")" = "$(cat "$here/VERSION")" ] && ok || bad "install: version stamp missing"
 expect "install version" 0 env HOME="$h" sh "$here/install.sh" version; has "install version" "$(cat "$here/VERSION")"
+c="$h/.claude/CLAUDE.md"
+[ "$(grep -c '^<!-- swe-harness:start' "$c")" = 1 ] && grep -q 'swe-change skill' "$c" && grep -q '^keep me$' "$c" && ok || bad "pointer: want one block plus the user's lines after two installs: $(cat "$c")"
+[ ! -e "$h/.codex" ] && ok || bad "pointer: created ~/.codex for a user without Codex"
+mkdir "$h/.codex"; HOME="$h" sh "$here/install.sh" >/dev/null 2>&1
+grep -q 'swe-review skill' "$h/.codex/AGENTS.md" 2>/dev/null && ok || bad "pointer: no block in ~/.codex/AGENTS.md when ~/.codex exists"
 mkdir -p "$h/.claude/skills/someone-else"
 expect "install uninstall" 0 env HOME="$h" sh "$here/install.sh" uninstall
 [ ! -e "$h/.claude/skills/swe-change" ] && [ ! -e "$h/.agents/skills/swe-browser-check" ] && ok || bad "uninstall: swe skills left behind"
 [ -d "$h/.claude/skills/someone-else" ] && ok || bad "uninstall: removed a skill it did not install"
+[ "$(cat "$c")" = "$(printf '# mine\nkeep me')" ] && ok || bad "uninstall: CLAUDE.md not restored to the user's lines: $(cat "$c")"
+[ ! -e "$h/.codex/AGENTS.md" ] && ok || bad "uninstall: left an AGENTS.md that only held the block"
 # manifest: every entry pinned to a full commit
 while IFS='|' read -r key name repo commit path licence; do
   case "$key" in ''|\#*) continue ;; esac

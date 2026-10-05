@@ -1,6 +1,10 @@
 # Changelog
 
 ## Unreleased
+- `install.sh` merges `pointer.md`, four lines naming when each skill applies, into `~/.claude/CLAUDE.md` and (if present) `~/.codex/AGENTS.md`; `uninstall` removes only that block. Sonnet 5.5 trials: skills fired on 7 of 11 prompts without it, 11 of 11 with it, and not on a plain question either way.
+- `swe-change` finds out why before changing behaviour that looks deliberate, and stops to ask when the reason is a rule from outside the code. Such rules are recorded with a comment at the code that enforces them. Trial: asked a week later to "simplify" an accountant's per-line rounding rule, plain Sonnet undid it 3 of 3 times; with these changes 0 of 3, each stopping to quote the rule.
+- Decision records: a rule from outside the code (a ruling, regulation, contract) qualifies on its own.
+- A new test must fail on its assertion, not on an import of code that does not exist yet.
 - `swe-review` ranks findings by three stated facts (reach, silent or loud, damage) into FIX NOW, FIX IF SMALL or NOTE, instead of Critical/Important/Minor. A silent wrong result on valid input is always FIX NOW; FIX NOW needs a concrete trigger input; the author can change a tier only by disproving a fact with evidence; an open FIX NOW leads the final message. Built-in `code-review` is a named step in Claude Code. From a trial where a silent misparse was left as "minor" and `/code-review` was skipped.
 
 ## 0.5.0 (2026-10-04)
