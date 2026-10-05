@@ -1,6 +1,7 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 (2026-10-04)
+From A/B trials in isolated Sonnet 5.5 sessions (plain versus harness, hidden graders).
 - `install.sh` merges `pointer.md`, four lines naming when each skill applies, into `~/.claude/CLAUDE.md` and (if present) `~/.codex/AGENTS.md`; `uninstall` removes only that block. Sonnet 5.5 trials: skills fired on 7 of 11 prompts without it, 11 of 11 with it, and not on a plain question either way.
 - `swe-change` finds out why before changing behaviour that looks deliberate, and stops to ask when the reason is a rule from outside the code. Such rules are recorded with a comment at the code that enforces them. Trial: asked a week later to "simplify" an accountant's per-line rounding rule, plain Sonnet undid it 3 of 3 times; with these changes 0 of 3, each stopping to quote the rule.
 - Decision records: a rule from outside the code (a ruling, regulation, contract) qualifies on its own.

@@ -46,6 +46,21 @@ The usual fixes are heavy: spec frameworks with phase gates, memory databases, a
 
 Repo structure, symbols, callers and history are looked up from the code when needed and never stored, so they never go stale.
 
+### Measured, not assumed
+
+Isolated Claude Code sessions on Sonnet 5.5, plain versus with swe-harness installed, same prompts, graded by hidden tests (October 2026, 0.6.0):
+
+| | Plain Sonnet 5.5 | With swe-harness |
+|---|---|---|
+| A rule from outside the code (an accountant's ruling) survives a later "simplify this" request | 0 of 3 | 3 of 3, each stopped and quoted the rule |
+| Silent money bug left by a 10-step batch job (`12,50` read as 1250.00) | left in | caught and fixed, 2 of 2 |
+| Regression test for a bug fix, seen failing first | sometimes added, not seen failing in any run | added, and seen failing before the fix |
+| Vague idea ("an app for my habits") | built an untested guess | one round of questions with recommended answers |
+| Correctness on spec'd builds, security fixes and reviews | full marks | full marks |
+| Cost | 1× | about 1.5× on small changes, up to 4× on long jobs with review |
+
+The harness does not make a strong model write more correct code; it makes the work proven, reviewed and remembered. `eval/run` repeats the core of these trials; `EVAL_ARM=without eval/run` is the baseline.
+
 ## 🚀 Quick start
 
 ```bash
