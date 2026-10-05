@@ -5,6 +5,7 @@
 - `swe-change` finds out why before changing behaviour that looks deliberate, and stops to ask when the reason is a rule from outside the code. Such rules are recorded with a comment at the code that enforces them. Trial: asked a week later to "simplify" an accountant's per-line rounding rule, plain Sonnet undid it 3 of 3 times; with these changes 0 of 3, each stopping to quote the rule.
 - Decision records: a rule from outside the code (a ruling, regulation, contract) qualifies on its own.
 - A new test must fail on its assertion, not on an import of code that does not exist yet.
+- `eval/run` installs the way `install.sh` does (user-level skills plus the pointer, in a private config folder per session), adds a one-line-rename task and a two-session outside-rule task, and `EVAL_ARM=without` runs the same tasks as a baseline. Sonnet 5.5: 27 of 27 checks with the harness; 13 of 27 without, including no regression test for the bug fix and the outside rule undone without asking.
 - `swe-review` ranks findings by three stated facts (reach, silent or loud, damage) into FIX NOW, FIX IF SMALL or NOTE, instead of Critical/Important/Minor. A silent wrong result on valid input is always FIX NOW; FIX NOW needs a concrete trigger input; the author can change a tier only by disproving a fact with evidence; an open FIX NOW leads the final message. Built-in `code-review` is a named step in Claude Code. From a trial where a silent misparse was left as "minor" and `/code-review` was skipped.
 
 ## 0.5.0 (2026-10-04)

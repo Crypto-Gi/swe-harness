@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# eval/run [MODEL] : run every task in eval/tasks against a fresh copy of the fixture, in real headless
-# Claude Code sessions, and check the result. Costs real usage (about $1-2 per full run on Sonnet).
+# eval/run [MODEL] : run every task below against a fresh copy of the fixture, in real headless Claude Code
+# sessions, and check the result. Costs real usage (about $2-3 per full run on Sonnet).
+# Each session gets its own config folder holding only what ./install.sh would put in ~/.claude: the core
+# skills and the pointer.md block. EVAL_ARM=without runs the same tasks with neither, as a baseline.
 # Default model: claude-sonnet-5-5, the default most people get. Needs the `claude` CLI, logged in.
 # Results: eval/results/<timestamp>/ (git-ignored). Exit 1 if any check fails.
 set -uo pipefail
@@ -11,18 +13,22 @@ out="$here/results/$(date +%Y%m%d-%H%M%S)"; mkdir -p "$out"
 fail=0
 
 session() { # session NAME DIR PROMPT
-  (cd "$2" && timeout 1200 claude -p "$3" --model "$model" --output-format stream-json --verbose --max-turns 80 \
-     --setting-sources project --allowedTools "Bash Edit Write Read Glob Grep Skill Agent" > "$out/$1.jsonl" 2> "$out/$1.err")
+  local cfg="$out/$1.config"; mkdir -p "$cfg"
+  if [ "${EVAL_ARM:-with}" != without ]; then
+    mkdir -p "$cfg/skills"; cp -R "$repo"/skills/* "$cfg/skills/"; cp "$repo/pointer.md" "$cfg/CLAUDE.md"
+  fi
+  (cd "$2" && env -u CLAUDE_CODE_SYNC_PLUGINS -u CLAUDE_CODE_SYNC_SKILLS CLAUDE_CONFIG_DIR="$cfg" \
+     timeout 1200 claude -p "$3" --model "$model" --output-format stream-json --verbose --max-turns 80 \
+     --setting-sources user,project --allowedTools "Bash Edit Write Read Glob Grep Skill Agent" > "$out/$1.jsonl" 2> "$out/$1.err")
 }
-used() { grep -q "\"name\":\"Skill\",\"input\":{\"skill\":\"$2\"" "$out/$1.jsonl"; }   # used NAME SKILL
+used() { grep -Eq "\"name\":\"Skill\",\"input\":\\{\"skill\":\"$2\"|$2/SKILL\\.md" "$out/$1.jsonl"; }   # used NAME SKILL
 ran()  { grep -q "$2" "$out/$1.jsonl"; }                                               # ran NAME TEXT
 check() { # check NAME DESCRIPTION COMMAND...
   local n=$1 d=$2; shift 2
   if "$@"; then echo "  pass  $n: $d"; else echo "  FAIL  $n: $d"; fail=1; fi
 }
-fresh() { # fresh NAME [bootstrapped] : a new fixture copy with the core skills installed in the project
+fresh() { # fresh NAME [bootstrapped] : a new fixture copy
   local d="$out/$1"; bash "$here/fixture.sh" "$d" >/dev/null
-  mkdir -p "$d/.claude/skills"; cp -R "$repo"/skills/* "$d/.claude/skills/"; echo '.claude/' >> "$d/.git/info/exclude"
   if [ "${2:-}" = bootstrapped ]; then
     printf '# invoicer\n\n## Commands\n- Full check: `make test`\n\n## How to work here\n- Any code change follows `swe-change`.\n' > "$d/AGENTS.md"
     printf '@AGENTS.md\n' > "$d/CLAUDE.md"
@@ -69,7 +75,22 @@ d=$(fresh review bootstrapped)
 session review "$d" "Review my last commit before I push it."
 check review "swe-review fired" used review swe-review
 check review "found the silent misparse of decimal commas" bash -c "grep -Eiq '12,50|1,25|decimal comma|european|silently' '$out/review.jsonl'"
+check review "ranked it FIX NOW" grep -q 'FIX NOW' "$out/review.jsonl"
 check review "changed nothing" bash -c "cd '$d' && git diff --quiet HEAD"
+
+echo "6. one-line rename"
+d=$(fresh rename); session rename "$d" "Rename the function subtotal to items_subtotal everywhere."
+check rename "swe-change fired on a one-line edit" used rename swe-change
+check rename "tests still pass" bash -c "cd '$d' && make test >/dev/null 2>&1"
+
+echo "7. a rule from outside the code survives a later cleanup"
+d=$(fresh rule1); session rule1 "$d" "Tax must be rounded per line item, half-up, to the cent, not once on the total. Our accountant requires this because printed invoices show per-line amounts and they have to add up exactly. Please change the code and commit."
+per_line() { (cd "$1" && printf 'description,quantity,unit_price\nA,1,0.10\nB,1,0.10\nC,1,0.10\n' > "$out/t.csv" && python3 -m invoicer "$out/t.csv" --tax 0.25 | grep -q 'total: 0.39'); }
+check rule1 "per-line rounding in force" per_line "$d"
+check rule1 "the outside reason is kept where the next editor looks" bash -c "cd '$d' && { git log -1 --format=%B; grep -rh -i accountant invoicer docs 2>/dev/null; } | grep -qi accountant"
+session rule2 "$d" "The totals code in invoicer is more complicated than it needs to be. Simplify it: add up the line items, then apply tax once to the subtotal. Commit when done."
+check rule2 "a fresh session did not undo the rule" per_line "$d"
+check rule2 "it asked before undoing it" bash -c "grep '\"type\":\"result\"' '$out/rule2.jsonl' | grep -Eqi 'accountant.*(confirm|ask|want|before)|(confirm|ask|want|before).*accountant'"
 
 grep -h '"type":"result"' "$out"/*.jsonl | python3 -c "import sys,json; print('cost: \$%.2f' % sum(json.loads(l).get('total_cost_usd') or 0 for l in sys.stdin))"
 [ "$fail" = 0 ] && echo "eval: all checks passed" || echo "eval: some checks failed (see $out)"
