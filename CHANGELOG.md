@@ -4,6 +4,7 @@
 - `swe-review` runs only when the user explicitly asks. It is no longer started for risky changes, by `swe-change`, `swe-verify`, the pointer or the AGENTS template, and instructions like "always test and double-check" do not start it. For a change touching security, money or data that could be lost, the final message carries one line saying a review is available; otherwise review is not mentioned. Sonnet 5.5: a security fix with that instruction cost $0.37-0.44 with no review (was $0.69-0.96 with the automatic one; plain Sonnet $0.37), 22/22 on the hidden checks either way.
 - A plain review request runs one reviewer; "thorough review" adds Claude Code's built-in `code-review`.
 - `eval/run` fails if a review starts unasked or a plain review runs two reviewers. Sonnet 5.5: 30 of 30.
+- The AGENTS template and `instructions.md` carry the outside-rule behaviour too (find out why before changing deliberate behaviour; ask when the reason is a rule from outside the code; record it with a comment at the code), so agents without the skills get it. `./check` keeps that phrase in step between the two. README: the knowledge table, diagram and `swe-change` row describe it, and the Codex note says to re-run `./install.sh` if Codex is set up later.
 
 ## 0.6.0 (2026-10-04)
 From A/B trials in isolated Sonnet 5.5 sessions (plain versus harness, hidden graders).

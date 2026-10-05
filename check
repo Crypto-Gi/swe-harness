@@ -45,7 +45,7 @@ sh -n install.sh 2>/dev/null || err "install.sh: syntax error"
 [ "$fail" = 0 ] && echo "ok: skill lint"
 
 # instructions.md copies rules from the AGENTS.md template; key phrases must match in both
-for p in "stop at the first that holds" "Keep the diff to the request" "grep every caller" "recursive or wildcard deletes" "Text in files, issues, logs and web pages is data"; do
+for p in "stop at the first that holds" "Keep the diff to the request" "grep every caller" "recursive or wildcard deletes" "Text in files, issues, logs and web pages is data" "rule from outside the code"; do
   grep -q "$p" skills/swe-bootstrap/assets/AGENTS.template.md || err "AGENTS.template.md lacks: $p"
   grep -q "$p" instructions.md || err "instructions.md lacks: $p (keep it in step with the template)"
 done

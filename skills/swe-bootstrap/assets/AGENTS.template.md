@@ -15,6 +15,7 @@ Each was run on {{DATE}}. No counts, timings or known bugs here: they change wit
 - Code, tests and git history are the truth. If this file or `docs/` disagrees with the code, the code wins: say so and fix the doc.
 - Before adding code, stop at the first that holds: not needed, already in this repo, standard library, platform feature, installed dependency, then the minimum new code. Never trim input validation at trust boundaries, error handling that prevents data loss, security or accessibility.
 - Fixing a bug: grep every caller of the function you touch and fix the shared function once.
+- Before changing behaviour that looks deliberate (a test pins it, a comment or commit explains it), find out why with `git log -L` or `git blame` and `docs/decisions/`. If the reason is a rule from outside the code (someone's ruling, a regulation, a contract), ask before changing it.
 - Keep the diff to the request: match the local style, do not reformat, rename or reorganise code you did not need to touch, and remove only what your own change made unused. Mention unrelated problems instead of fixing them.
 - If the request, or your first idea, would grow the scope (a rewrite for a narrow bug, an abstraction with one user, a public API nobody asked for), say so and offer the smaller path.
 - Any code change follows `swe-change`: understand, design if there is a real choice, implement, verify, close out. A small change is just understand, edit, verify.
@@ -30,7 +31,7 @@ Each was run on {{DATE}}. No counts, timings or known bugs here: they change wit
 
 ## Where knowledge lives
 - This file: operating rules and commands that were run.
-- `docs/decisions/`: significant or hard-to-reverse decisions and why. Read the entries for the area you touch; never silently contradict one. Format and bar in its `README.md`.
+- `docs/decisions/`: significant or hard-to-reverse decisions, and any rule from outside the code, with why. Such a rule also gets a one-line comment where the code enforces it. Read the entries for the area you touch; never silently contradict one. Format and bar in its `README.md`.
 - `docs/specs/`: intended behaviour worth stating apart from the code. Created only when a change needs it.
 - `docs/plans/`: temporary, for multi-session work; deleted when the work closes.
 - Commit messages: why this implementation. Code, tests and git: everything else. Do not write down what can be looked up.

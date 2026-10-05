@@ -20,7 +20,7 @@ flowchart LR
     end
     V --> K{"Close out: what can't<br/>code, tests and git explain?"}
     R --> K
-    K -->|big trade-off| DEC[("docs/decisions")]
+    K -->|big trade-off or outside rule| DEC[("docs/decisions")]
     K -->|intended behaviour| SPEC[("docs/specs")]
     K -->|rule or command| AG[("AGENTS.md")]
     K -->|why this code| GIT[("commit message")]
@@ -116,7 +116,7 @@ git clone https://github.com/Crypto-Gi/swe-harness && cd swe-harness
 ./install.sh
 ```
 
-Codex reads skills from `~/.agents/skills` and project rules from `AGENTS.md`. Restart Codex after installing.
+Codex reads skills from `~/.agents/skills` and project rules from `AGENTS.md`. The pointer goes into `~/.codex/AGENTS.md` only if `~/.codex` already exists, so if you set up Codex later, run `./install.sh` again. Restart Codex after installing.
 </details>
 
 <details>
@@ -182,7 +182,7 @@ Pinned skills change only when their commit in [`optional/sources`](optional/sou
 | Skill | What it owns | Say |
 |---|---|---|
 | [`swe-bootstrap`](skills/swe-bootstrap/SKILL.md) | Sets up a repo: short `AGENTS.md`, `CLAUDE.md` as `@AGENTS.md`, decision-record format | "bootstrap this project" |
-| [`swe-change`](skills/swe-change/SKILL.md) | Any code change, start to finish: shapes new ideas, implements, verifies, keeps only what matters, and commits with the README brought up to date | "implement this", "fix this", "continue the work" |
+| [`swe-change`](skills/swe-change/SKILL.md) | Any code change, start to finish: shapes new ideas, asks before undoing a rule from outside the code, implements, verifies, keeps only what matters, and commits with the README brought up to date | "implement this", "fix this", "continue the work" |
 | [`swe-verify`](skills/swe-verify/SKILL.md) | Done is an exit code, and tests must not have been weakened | "is it done", "verify this" |
 | [`swe-review`](skills/swe-review/SKILL.md) | Only when you ask: a fresh context tries to refute the change. "Thorough review" adds Claude Code's `/code-review` | "review this", "thorough review" |
 | [`swe-debug`](skills/swe-debug/SKILL.md) | Reproduce with one command before theorising; stop after three failed fixes | "debug this" |
@@ -192,10 +192,11 @@ Pinned skills change only when their commit in [`optional/sources`](optional/sou
 | Place | Holds |
 |---|---|
 | `AGENTS.md` | Operating rules and check commands that were run |
-| `docs/decisions/` | Significant or hard-to-reverse decisions, and why |
+| `docs/decisions/` | Significant or hard-to-reverse decisions, and rules from outside the code (a ruling, regulation, contract), with why |
 | `docs/specs/` | Intended behaviour, only when code and tests can't carry it |
 | `docs/plans/` | Temporary, for multi-session work; deleted at the end |
 | Commit messages | Why this implementation |
+| A one-line code comment | Only for a rule from outside the code, at the line that enforces it, naming its decision record |
 
 **Tech stack:** Markdown skills in the [Agent Skills](https://agentskills.io) format, plus four small bash scripts that need only bash, git and awk. No runtime, server or database.
 

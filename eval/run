@@ -41,7 +41,7 @@ unchanged() { (cd "$1" && git diff --quiet HEAD -- invoicer tests); }   # unchan
 echo "eval: model $model, results in $out"
 
 echo "1. bootstrap"
-d=$(fresh bootstrap); session bootstrap "$d" "bootstrap this project"
+d=$(fresh bootstrap); session bootstrap "$d" "bootstrap this project (hybrid storage mode is fine)"
 check bootstrap "swe-bootstrap fired" used bootstrap swe-bootstrap
 check bootstrap "AGENTS.md written, at most 100 lines" test -f "$d/AGENTS.md" -a "$(wc -l < "$d/AGENTS.md" 2>/dev/null || echo 999)" -le 100
 check bootstrap "CLAUDE.md is exactly @AGENTS.md" test "$(cat "$d/CLAUDE.md" 2>/dev/null)" = "@AGENTS.md"
