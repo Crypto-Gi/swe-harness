@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# List everything a person wrote to explain this repository, so bootstrap can triage it:
+# each doc's path, line count, last change and first line. It also lists office/PDF documents
+# (named, not opened), secret files (named, never opened) and the parent folders' agent and
+# memory files. Vendored, generated and test-data folders are skipped, and so are manifests,
+# lockfiles, licences and logs.
+# Usage: list-docs [DIR]   (default: current directory)
+set -uo pipefail
+cd "${1:-.}" || exit 2
+root=$(pwd -P)
+cap=${LIST_DOCS_CAP:-300}
+
+prune='\( -name .git -o -name node_modules -o -name .venv -o -name venv -o -name __pycache__ -o -name dist -o -name build -o -name target -o -name vendor -o -name third_party -o -name site-packages -o -name .tox -o -name .mypy_cache -o -name .pytest_cache -o -name coverage -o -name .next -o -name fixtures -o -name testdata -o -name test_data -o -name __snapshots__ -o -name .claude -o -name .agents -o -name .swe -o -name .idea -o -name .vscode \)'
+
+kind() { # kind PATH -> doc | binary | secret | other
+  local p=$1 b l
+  b=$(basename "$p"); l=$(printf '%s' "$b" | tr '[:upper:]' '[:lower:]')
+  case "$l" in
+    *.example|*.sample|*.template|*.dist) ;;
+    .env|.env.*|*.pem|*.key|*.p12|*.pfx|id_rsa*|id_ed25519*|id_ecdsa*) echo secret; return ;;
+  esac
+  case "$l" in
+    credentials.*|secrets.json|secrets.y*ml|secrets.toml|secrets.ini) echo secret; return ;;
+    *.pdf|*.docx|*.doc|*.pptx|*.ppt|*.xlsx|*.xls|*.odt|*.rtf|*.pages|*.vsdx) echo binary; return ;;
+    requirements*.txt|constraints*.txt|cmakelists.txt|robots.txt|license*|licence*|copying*|notice*|*.log|*.lock) echo other; return ;;
+    *.md|*.markdown|*.mdx|*.txt|*.text|*.rst|*.adoc|*.asciidoc|*.org) echo doc; return ;;
+  esac
+  case "$b" in *.*) echo other; return ;; esac
+  # no extension: a doc if it has a doc-like name or sits in a docs-like folder, and is text
+  if printf '%s' "$l" | grep -Eq '^(readme|notes|todo|handoff|decisions|changelog|contributing|architecture|design|runbook)$' \
+     || printf '/%s' "$p" | grep -Eqi '/(docs?|notes|memory|adr|decisions|wiki)/'; then
+    grep -Iq . "$p" 2>/dev/null && { echo doc; return; }
+  fi
+  echo other
+}
+
+changed() { # last change: git commit date if tracked, else file time
+  local d
+  d=$(git log -1 --format=%cs -- "$1" 2>/dev/null)
+  [ -n "$d" ] || d=$(date -r "$1" +%F 2>/dev/null) || d="?"
+  echo "${d:-?}"
+}
+
+title() { # first non-empty line, markdown and rst marks removed, 80 characters at most
+  awk 'NF { sub(/^[#=*>[:space:]-]+/, ""); if (length($0)) { print substr($0, 1, 80); exit } }' "$1" 2>/dev/null
+}
+
+docs=(); binaries=(); secrets=()
+while IFS= read -r -d '' f; do
+  p=${f#./}
+  case "$(kind "$p")" in
+    doc) docs+=("$p") ;;
+    binary) binaries+=("$p") ;;
+    secret) secrets+=("$p") ;;
+  esac
+done < <(eval "find . $prune -prune -o -type f -print0" 2>/dev/null | sort -z)
+
+echo "# docs in this repository: ${#docs[@]} (path | lines | last changed | first line)"
+n=0
+for p in "${docs[@]}"; do
+  n=$((n + 1)); [ "$n" -le "$cap" ] || continue
+  printf '%s | %s | %s | %s\n' "$p" "$(wc -l < "$p" | tr -d ' ')" "$(changed "$p")" "$(title "$p")"
+done
+[ "${#docs[@]}" -gt "$cap" ] && echo "... $(( ${#docs[@]} - cap )) more not listed (cap $cap)"
+
+# parent folders, up to three levels, stopping at the home directory
+echo "# agent and memory files in parent folders (outside this repository)"
+up=""; dir=$root
+for _ in 1 2 3; do
+  dir=$(dirname "$dir"); up="../$up"
+  [ "$dir" = "/" ] || [ "$dir" = "$HOME" ] && break
+  for f in "$dir"/AGENTS.md "$dir"/CLAUDE.md "$dir"/DECISIONS.md "$dir"/memory/*.md "$dir"/docs/decisions/*.md; do
+    [ -f "$f" ] && printf '%s | %s | %s\n' "$up${f#"$dir"/}" "$(wc -l < "$f" | tr -d ' ')" "$(title "$f")"
+  done
+done
+
+echo "# office and PDF documents: listed, not opened (${#binaries[@]})"
+for p in "${binaries[@]}"; do echo "$p"; done
+echo "# secret files: never opened (${#secrets[@]})"
+for p in "${secrets[@]}"; do echo "$p"; done
+skipped=$(eval "find . -name .git -prune -o $prune -prune -type d -print0" 2>/dev/null | xargs -0 -I{} find {} -type f \( -name '*.md' -o -name '*.txt' -o -name '*.rst' \) 2>/dev/null | wc -l | tr -d ' ')
+echo "# skipped: $skipped doc-like files inside vendored, generated, agent-config or test-data folders"

@@ -96,6 +96,28 @@ rm -rf "$tmp/c"; mkdir "$tmp/c"; cd "$tmp/c"; printf '[workspace]\nmembers = ["a
 expect "detect cargo/go/bazel" 0 bash "$D" .
 has "detect cargo/go/bazel" "Cargo.toml:[workspace]"; has "detect cargo/go/bazel" "go.work"; has "detect cargo/go/bazel" "build tool: bazel"
 
+# --- list-docs
+L="$here/skills/swe-bootstrap/scripts/list-docs"
+rm -rf "$tmp/d"; mkdir -p "$tmp/d/memory" "$tmp/d/repo/docs" "$tmp/d/repo/node_modules/x" "$tmp/d/repo/tests/fixtures" "$tmp/d/repo/my notes"
+printf '# Customer rules\n' > "$tmp/d/AGENTS.md"; printf '# Decisions\n' > "$tmp/d/memory/DECISIONS.md"
+cd "$tmp/d/repo"; git init -q -b main .
+printf '# Repo\n' > README.md; printf 'Design notes\nnever retry writes\n' > design-notes.txt; printf 'flask\n' > requirements.txt
+printf 'x\n' > LICENSE; printf '%%PDF-1.4\n' > docs/handoff.pdf; printf 'TOKEN=supersecret\n' > .env; printf 'TOKEN=\n' > .env.example
+printf '# vendored\n' > node_modules/x/README.md; printf 'fixture\n' > tests/fixtures/a.txt; printf 'Guide title\n=====\n' > docs/guide.rst
+printf 'plain notes\n' > docs/NOTES; printf 'spaced\n' > "my notes/a b.md"; printf 'print(1)\n' > docs/conf.py
+expect "list-docs" 0 env HOME=/nonexistent bash "$L" .
+has "list-docs" "docs in this repository: 5"; has "list-docs" "design-notes.txt | 2 |"; has "list-docs" "| Design notes"
+has "list-docs" "docs/guide.rst"; has "list-docs" "docs/NOTES"; has "list-docs" "my notes/a b.md"; has "list-docs" "| Repo"
+has "list-docs" "../AGENTS.md"; has "list-docs" "../memory/DECISIONS.md"
+has "list-docs" "listed, not opened (1)"; has "list-docs" "docs/handoff.pdf"; has "list-docs" "never opened (1)"
+has "list-docs" "skipped: 2 doc-like files"
+lacks "list-docs" "requirements.txt"; lacks "list-docs" "LICENSE"; lacks "list-docs" "conf.py"; lacks "list-docs" ".env.example"
+lacks "list-docs" "supersecret"; lacks "list-docs" "fixtures/a.txt"
+expect "list-docs cap" 0 env HOME=/nonexistent LIST_DOCS_CAP=2 bash "$L" .
+has "list-docs cap" "... 3 more not listed (cap 2)"
+expect "list-docs home stop" 0 env HOME="$tmp/d" bash "$L" .
+lacks "list-docs home stop" "../AGENTS.md"
+
 # --- install.sh (core only, no network)
 h="$tmp/home"; mkdir -p "$h/.claude"; printf '# mine\nkeep me\n' > "$h/.claude/CLAUDE.md"
 out=$(HOME="$h" GIT_ALLOW_PROTOCOL=none sh "$here/install.sh" 2>&1); rc=$?

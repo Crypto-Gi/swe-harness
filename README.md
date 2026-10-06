@@ -73,7 +73,7 @@ Restart your agent, open any code repository and say:
 bootstrap this project
 ```
 
-You get a short `AGENTS.md` whose check commands were actually run, a one-line `CLAUDE.md`, and a home for decision records. Then work as usual:
+Bootstrap looks at every doc and notes file in the repo, reads the ones that matter, and runs the check commands. You get a short `AGENTS.md` that records those commands and points to your existing docs, decisions and parent-folder rules, a one-line `CLAUDE.md`, and a home for decision records if you don't have one yet. Then work as usual:
 
 ```
 add rate limiting to the login endpoint
@@ -181,7 +181,7 @@ Pinned skills change only when their commit in [`optional/sources`](optional/sou
 
 | Skill | What it owns | Say |
 |---|---|---|
-| [`swe-bootstrap`](skills/swe-bootstrap/SKILL.md) | Sets up a repo: short `AGENTS.md`, `CLAUDE.md` as `@AGENTS.md`, decision-record format | "bootstrap this project" |
+| [`swe-bootstrap`](skills/swe-bootstrap/SKILL.md) | Sets up a repo: looks at every doc and notes file (and parent-folder rules), reads the ones that matter, then writes a short `AGENTS.md` that points to them, `CLAUDE.md` as `@AGENTS.md`, and a decision-record home unless one already exists | "bootstrap this project" |
 | [`swe-change`](skills/swe-change/SKILL.md) | Any code change, start to finish: shapes new ideas, asks before undoing a rule from outside the code, implements, verifies, keeps only what matters, and commits with the README brought up to date | "implement this", "fix this", "continue the work" |
 | [`swe-verify`](skills/swe-verify/SKILL.md) | Done is an exit code, and tests must not have been weakened | "is it done", "verify this" |
 | [`swe-review`](skills/swe-review/SKILL.md) | Only when you ask: a fresh context tries to refute the change. "Thorough review" adds Claude Code's `/code-review` | "review this", "thorough review" |
@@ -198,7 +198,7 @@ Pinned skills change only when their commit in [`optional/sources`](optional/sou
 | Commit messages | Why this implementation |
 | A one-line code comment | Only for a rule from outside the code, at the line that enforces it, naming its decision record |
 
-**Tech stack:** Markdown skills in the [Agent Skills](https://agentskills.io) format, plus four small bash scripts that need only bash, git and awk. No runtime, server or database.
+**Tech stack:** Markdown skills in the [Agent Skills](https://agentskills.io) format, plus five small bash scripts that need only bash, git and awk. No runtime, server or database.
 
 | Script | Does |
 |---|---|
@@ -206,6 +206,7 @@ Pinned skills change only when their commit in [`optional/sources`](optional/sou
 | `test-guard` | Flags deleted or skipped tests, silenced checkers, removed assertions |
 | `review-package` | Writes the diff under review to one file for the reviewer |
 | `detect-stack` | Lists stack, workspaces, build tools and candidate check commands |
+| `list-docs` | Lists every doc and notes file (`.md`, `.txt`, `.rst` and more) with its first line, plus parent-folder agent and memory files; names PDFs and office files without opening them and secret files without ever reading them |
 
 ## 🤝 Works alongside built-in skills
 

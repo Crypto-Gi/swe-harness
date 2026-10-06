@@ -12,7 +12,7 @@ Each task starts from a fresh copy of the `invoicer` project (`fixture.sh`: stdl
 
 | Task | What it checks |
 |---|---|
-| bootstrap | skill fires; `AGENTS.md` short, no counts or known bugs; `CLAUDE.md` is `@AGENTS.md`; no code touched |
+| bootstrap | skill fires; `list-docs` runs; `AGENTS.md` short, no counts or known bugs; `CLAUDE.md` is `@AGENTS.md`; no code touched |
 | bug, not bootstrapped | `swe-change` fires on a plain bug report; fix works; test added; `verified` and `test-guard` used; no review started; nothing committed |
 | feature with commit | one commit; README updated in it; message explains why; `verified` used; no review started |
 | vague "make it faster" | no code changed without a measurement |

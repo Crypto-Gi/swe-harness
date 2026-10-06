@@ -11,6 +11,9 @@ Each was run on {{DATE}}. No counts, timings or known bugs here: they change wit
 ## Conventions that differ from the defaults
 {{Only what an agent would get wrong and no linter enforces. Delete this section if empty.}}
 
+## Read before changing
+{{One line per area: the existing doc or parent-folder rules to read first, e.g. `docs/ARCHITECTURE.md` before changing the planner. Point, never copy. Delete this section if the repo has no such docs.}}
+
 ## How to work here
 - Code, tests and git history are the truth. If this file or `docs/` disagrees with the code, the code wins: say so and fix the doc.
 - Before adding code, stop at the first that holds: not needed, already in this repo, standard library, platform feature, installed dependency, then the minimum new code. Never trim input validation at trust boundaries, error handling that prevents data loss, security or accessibility.
@@ -31,7 +34,7 @@ Each was run on {{DATE}}. No counts, timings or known bugs here: they change wit
 
 ## Where knowledge lives
 - This file: operating rules and commands that were run.
-- `docs/decisions/`: significant or hard-to-reverse decisions, and any rule from outside the code, with why. Such a rule also gets a one-line comment where the code enforces it. Read the entries for the area you touch; never silently contradict one. Format and bar in its `README.md`.
+- `{{DECISIONS: docs/decisions/, or wherever this repo already keeps them}}`: significant or hard-to-reverse decisions, and any rule from outside the code, with why. Such a rule also gets a one-line comment where the code enforces it. Read the entries for the area you touch; never silently contradict one. Format and bar in its `README.md`.
 - `docs/specs/`: intended behaviour worth stating apart from the code. Created only when a change needs it.
 - `docs/plans/`: temporary, for multi-session work; deleted when the work closes.
 - Commit messages: why this implementation. Code, tests and git: everything else. Do not write down what can be looked up.
