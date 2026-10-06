@@ -10,6 +10,8 @@
 
 - `list-docs` works on macOS's bash 3.2: it crashed at the end when a repo had no PDF, office or secret files, because bash before 4.4 treats an empty array as unbound under `set -u`. Lists now go through temporary files, and it no longer needs `sort -z`. Found in a real run on a Mac.
 
+- Project facts move out of `AGENTS.md` into a new `agent-guide.md` next to it. `AGENTS.md` and `CLAUDE.md` belong to the user: bootstrap creates `AGENTS.md` only if there is none (working rules, a "Your instructions" section, and a first line pointing to `agent-guide.md`), and in an existing one adds only that pointer line. Commands, conventions, "read before changing" pointers and where decisions live go in `agent-guide.md`, which bootstrap owns and refresh edits by diff. `CLAUDE.md` imports both. Refresh offers to move project facts out of an older `AGENTS.md`. `swe-change` and `swe-verify` read commands from the guide and never write project facts to `AGENTS.md`. Sonnet 5.5: fresh bootstrap 17 of 17 checks twice; a user's existing `AGENTS.md` kept every line plus the pointer; a later session ran a check step written only in the guide 4 of 4 times, including 2 of 2 with no `CLAUDE.md` import (the pointer alone, as Codex and others see it). `eval/run`: 34 of 34.
+
 ## 0.6.0 (2026-10-04)
 From A/B trials in isolated Sonnet 5.5 sessions (plain versus harness, hidden graders).
 - `install.sh` merges `pointer.md`, four lines naming when each skill applies, into `~/.claude/CLAUDE.md` and (if present) `~/.codex/AGENTS.md`; `uninstall` removes only that block. Sonnet 5.5 trials: skills fired on 7 of 11 prompts without it, 11 of 11 with it, and not on a plain question either way.

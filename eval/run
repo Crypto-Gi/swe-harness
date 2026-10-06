@@ -30,8 +30,9 @@ check() { # check NAME DESCRIPTION COMMAND...
 fresh() { # fresh NAME [bootstrapped] : a new fixture copy
   local d="$out/$1"; bash "$here/fixture.sh" "$d" >/dev/null
   if [ "${2:-}" = bootstrapped ]; then
-    printf '# invoicer\n\n## Commands\n- Full check: `make test`\n\n## How to work here\n- Any code change follows `swe-change`.\n' > "$d/AGENTS.md"
-    printf '@AGENTS.md\n' > "$d/CLAUDE.md"
+    printf '# invoicer\n\nBefore any work, read `agent-guide.md`.\n\n## How to work here\n- Any code change follows `swe-change`.\n' > "$d/AGENTS.md"
+    printf '# invoicer: agent guide\n\n## Commands\n- Full check: `make test`\n' > "$d/agent-guide.md"
+    printf '@AGENTS.md\n@agent-guide.md\n' > "$d/CLAUDE.md"
     (cd "$d" && git -c user.name=eval -c user.email=eval@example.com add -A && git -c user.name=eval -c user.email=eval@example.com commit -qm "agent guide")
   fi
   echo "$d"
@@ -41,13 +42,19 @@ unchanged() { (cd "$1" && git diff --quiet HEAD -- invoicer tests); }   # unchan
 echo "eval: model $model, results in $out"
 
 echo "1. bootstrap"
-d=$(fresh bootstrap); session bootstrap "$d" "bootstrap this project (hybrid storage mode is fine)"
+d=$(fresh bootstrap)   # the user already has their own AGENTS.md
+printf '# House rules\n\n- Write commit messages in British English.\n- Never touch vendor/ without asking Sam.\n' > "$d/AGENTS.md"
+(cd "$d" && git -c user.name=eval -c user.email=eval@example.com add -A && git -c user.name=eval -c user.email=eval@example.com commit -qm "house rules")
+session bootstrap "$d" "bootstrap this project (hybrid storage mode is fine)"
 check bootstrap "swe-bootstrap fired" used bootstrap swe-bootstrap
-check bootstrap "AGENTS.md written, at most 100 lines" test -f "$d/AGENTS.md" -a "$(wc -l < "$d/AGENTS.md" 2>/dev/null || echo 999)" -le 100
-check bootstrap "CLAUDE.md is exactly @AGENTS.md" test "$(cat "$d/CLAUDE.md" 2>/dev/null)" = "@AGENTS.md"
+check bootstrap "agent-guide.md written, at most 100 lines" test -f "$d/agent-guide.md" -a "$(wc -l < "$d/agent-guide.md" 2>/dev/null || echo 999)" -le 100
+check bootstrap "agent-guide.md holds the check command" grep -q 'unittest\|make test' "$d/agent-guide.md"
+check bootstrap "the user's AGENTS.md lines are all still there" bash -c "cd '$d' && git show HEAD:AGENTS.md | while IFS= read -r l; do grep -qxF -- \"\$l\" AGENTS.md || exit 1; done"
+check bootstrap "AGENTS.md now points to agent-guide.md" grep -q 'agent-guide.md' "$d/AGENTS.md"
+check bootstrap "CLAUDE.md loads both files" bash -c "grep -qx '@AGENTS.md' '$d/CLAUDE.md' && grep -qx '@agent-guide.md' '$d/CLAUDE.md'"
 check bootstrap "no source code changed" unchanged "$d"
 check bootstrap "listed the docs before writing" ran bootstrap "list-docs"
-check bootstrap "no test counts or known-bug section in AGENTS.md" bash -c "! grep -Eiq '[0-9]+ tests|^#+ *known' '$d/AGENTS.md'"
+check bootstrap "no test counts or known-bug section in agent-guide.md" bash -c "! grep -Eiq '[0-9]+ tests|^#+ *known' '$d/agent-guide.md'"
 
 echo "2. bug report, repo not bootstrapped"
 d=$(fresh bug); session bug "$d" "python3 -m invoicer sample.csv crashes with InvalidOperation. Fix it."

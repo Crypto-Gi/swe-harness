@@ -22,7 +22,7 @@ flowchart LR
     R --> K
     K -->|big trade-off or outside rule| DEC[("docs/decisions")]
     K -->|intended behaviour| SPEC[("docs/specs")]
-    K -->|rule or command| AG[("AGENTS.md")]
+    K -->|convention or command| AG[("agent-guide.md")]
     K -->|why this code| GIT[("commit message")]
     K -->|everything else| X["discarded"]
 ```
@@ -73,7 +73,7 @@ Restart your agent, open any code repository and say:
 bootstrap this project
 ```
 
-Bootstrap looks at every doc and notes file in the repo, reads the ones that matter, and runs the check commands. You get a short `AGENTS.md` that records those commands and points to your existing docs, decisions and parent-folder rules, a one-line `CLAUDE.md`, and a home for decision records if you don't have one yet. Then work as usual:
+Bootstrap looks at every doc and notes file in the repo, reads the ones that matter, and runs the check commands. You get `agent-guide.md`, which records those commands and points to your existing docs, decisions and parent-folder rules; an `AGENTS.md` with working rules and room for your own instructions (only if you don't have one; an existing one is left as it is, plus one line pointing to the guide); a `CLAUDE.md` that loads both; and a home for decision records if you don't have one yet. Then work as usual:
 
 ```
 add rate limiting to the login endpoint
@@ -181,7 +181,7 @@ Pinned skills change only when their commit in [`optional/sources`](optional/sou
 
 | Skill | What it owns | Say |
 |---|---|---|
-| [`swe-bootstrap`](skills/swe-bootstrap/SKILL.md) | Sets up a repo: looks at every doc and notes file (and parent-folder rules), reads the ones that matter, then writes a short `AGENTS.md` that points to them, `CLAUDE.md` as `@AGENTS.md`, and a decision-record home unless one already exists | "bootstrap this project" |
+| [`swe-bootstrap`](skills/swe-bootstrap/SKILL.md) | Sets up a repo: looks at every doc and notes file (and parent-folder rules), reads the ones that matter, then writes `agent-guide.md` pointing to them, an `AGENTS.md` only if you have none, a `CLAUDE.md` that loads both, and a decision-record home unless one already exists | "bootstrap this project" |
 | [`swe-change`](skills/swe-change/SKILL.md) | Any code change, start to finish: shapes new ideas, asks before undoing a rule from outside the code, implements, verifies, keeps only what matters, and commits with the README brought up to date | "implement this", "fix this", "continue the work" |
 | [`swe-verify`](skills/swe-verify/SKILL.md) | Done is an exit code, and tests must not have been weakened | "is it done", "verify this" |
 | [`swe-review`](skills/swe-review/SKILL.md) | Only when you ask: a fresh context tries to refute the change. "Thorough review" adds Claude Code's `/code-review` | "review this", "thorough review" |
@@ -191,7 +191,8 @@ Pinned skills change only when their commit in [`optional/sources`](optional/sou
 
 | Place | Holds |
 |---|---|
-| `AGENTS.md` | Operating rules and check commands that were run |
+| `agent-guide.md` | Check commands that were run, conventions, and which docs to read before changing what. Written by bootstrap, next to `AGENTS.md` |
+| `AGENTS.md` | Yours: working rules and your own instructions. Skills never write project facts here |
 | `docs/decisions/` | Significant or hard-to-reverse decisions, and rules from outside the code (a ruling, regulation, contract), with why |
 | `docs/specs/` | Intended behaviour, only when code and tests can't carry it |
 | `docs/plans/` | Temporary, for multi-session work; deleted at the end |
@@ -218,7 +219,7 @@ You don't list built-in skills anywhere: each app shows its own skills to the mo
 | `/verify`, `/run` | `swe-verify` proves checks pass; `/verify` (you run it) watches the app work. `swe-browser-check` uses `/run` to launch the page |
 | `/security-review` | Use it for everyday changes; `swe-security-audit` is for a full codebase audit |
 | `/simplify` | Use it to clean up over-built code; the harness has no duplicate |
-| `/init` | Use `swe-bootstrap` instead: it writes `AGENTS.md`, which Codex, Cursor and Devin read too. Bootstrap moves anything useful out of an existing `/init` file |
+| `/init` | Use `swe-bootstrap` instead: it writes `agent-guide.md` and an `AGENTS.md` that points to it, which Codex, Cursor and Devin read too. Bootstrap moves anything useful out of an existing `/init` file |
 | `/debug` | Unrelated: it debugs Claude Code's session. `swe-debug` is for bugs in your code |
 
 In Codex and other agents, `swe-review` does the whole review itself. Claude desktop's document skills (Word, PDF, slides, spreadsheets) don't overlap and work as before.

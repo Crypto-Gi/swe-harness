@@ -23,8 +23,9 @@ A lean engineering brain and harness for coding agents (Claude Code and Codex): 
 - Deterministic work goes in a script with a test in `tests/run`. Skills call scripts as `bash scripts/<name>`.
 - No always-on parts: no session hooks, no router skill, nothing a project must install to function. The one exception is `pointer.md`, four lines the installer puts in the user's instructions file, because without it the skills fired on 7 of 11 trial prompts. Keep it at four lines.
 - The test for every addition: does it preserve important engineering knowledge that cannot be derived from code, tests and git, or give reliable feedback a strong model cannot give itself? If not, leave it out.
+- A project's `AGENTS.md` and `CLAUDE.md` belong to its user. Skills write project facts only to `agent-guide.md`; bootstrap may add the lines that point there and nothing else.
 - `swe-change` stays a checklist, not a process: no tiers, gates, required documents or announcements. A small change must still read as understand, edit, verify.
-- Kept project knowledge has five homes and no more: `AGENTS.md`, `docs/decisions/`, `docs/specs/`, temporary `docs/plans/`, commit messages. A rule from outside the code also gets a one-line comment where the code enforces it, because that is where the next editor looks. Nothing that can be looked up is stored.
+- Kept project knowledge has five homes and no more: `agent-guide.md`, `docs/decisions/`, `docs/specs/`, temporary `docs/plans/`, commit messages. A rule from outside the code also gets a one-line comment where the code enforces it, because that is where the next editor looks. Nothing that can be looked up is stored.
 - Borrowed text keeps its attribution line and a row in `SOURCES.md`.
 - Other people's skill trees are never stored here. Add them to `optional/sources` pinned to a full commit; change a pin only after reading the upstream diff, and run `./check --network`.
 - Never copy from sources whose licence forbids it (Anthropic's docx/pdf/pptx/xlsx skills) or requires share-alike (Trail of Bits, CC BY-SA).

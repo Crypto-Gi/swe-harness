@@ -8,7 +8,7 @@ description: Prove that code work is finished before saying so. Use before claim
 Done is an exit code, not a statement. Scripts are in this skill's `scripts/` folder; run them with `bash`.
 
 ## Before saying work is done
-1. Take the project's check command from `AGENTS.md`. If there is none, find it (CI config, manifest scripts), run it, and offer to record it.
+1. Take the project's check command from `agent-guide.md` (in older setups, `AGENTS.md`). If there is none, find it (CI config, manifest scripts), run it, and offer to record it in `agent-guide.md`.
 2. Run it through the recorder, after your last edit:
    `bash scripts/verified <label> -- <check command>`
    It prints the last lines and records the pass in `.swe/verified.log` only on exit 0. A non-zero exit means the work is not done: fix the cause and run it again.
