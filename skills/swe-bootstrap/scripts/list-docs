@@ -45,23 +45,24 @@ title() { # first non-empty line, markdown and rst marks removed, 80 characters 
   awk 'NF { sub(/^[#=*>[:space:]-]+/, ""); if (length($0)) { print substr($0, 1, 80); exit } }' "$1" 2>/dev/null
 }
 
-docs=(); binaries=(); secrets=()
+# lists go to temporary files, not arrays: macOS ships bash 3.2, where an empty array under set -u is an error
+t=$(mktemp -d) || exit 2; trap 'rm -rf "$t"' EXIT
+: > "$t/doc"; : > "$t/binary"; : > "$t/secret"
 while IFS= read -r -d '' f; do
   p=${f#./}
-  case "$(kind "$p")" in
-    doc) docs+=("$p") ;;
-    binary) binaries+=("$p") ;;
-    secret) secrets+=("$p") ;;
-  esac
-done < <(eval "find . $prune -prune -o -type f -print0" 2>/dev/null | sort -z)
+  k=$(kind "$p")
+  case "$k" in doc|binary|secret) printf '%s\n' "$p" >> "$t/$k" ;; esac
+done < <(eval "find . $prune -prune -o -type f -print0" 2>/dev/null)
+for k in doc binary secret; do LC_ALL=C sort -o "$t/$k" "$t/$k"; done
+count() { wc -l < "$1" | tr -d ' '; }
 
-echo "# docs in this repository: ${#docs[@]} (path | lines | last changed | first line)"
+echo "# docs in this repository: $(count "$t/doc") (path | lines | last changed | first line)"
 n=0
-for p in "${docs[@]}"; do
+while IFS= read -r p; do
   n=$((n + 1)); [ "$n" -le "$cap" ] || continue
   printf '%s | %s | %s | %s\n' "$p" "$(wc -l < "$p" | tr -d ' ')" "$(changed "$p")" "$(title "$p")"
-done
-[ "${#docs[@]}" -gt "$cap" ] && echo "... $(( ${#docs[@]} - cap )) more not listed (cap $cap)"
+done < "$t/doc"
+[ "$(count "$t/doc")" -gt "$cap" ] && echo "... $(( $(count "$t/doc") - cap )) more not listed (cap $cap)"
 
 # parent folders, up to three levels, stopping at the home directory
 echo "# agent and memory files in parent folders (outside this repository)"
@@ -74,9 +75,9 @@ for _ in 1 2 3; do
   done
 done
 
-echo "# office and PDF documents: listed, not opened (${#binaries[@]})"
-for p in "${binaries[@]}"; do echo "$p"; done
-echo "# secret files: never opened (${#secrets[@]})"
-for p in "${secrets[@]}"; do echo "$p"; done
+echo "# office and PDF documents: listed, not opened ($(count "$t/binary"))"
+cat "$t/binary"
+echo "# secret files: never opened ($(count "$t/secret"))"
+cat "$t/secret"
 skipped=$(eval "find . -name .git -prune -o $prune -prune -type d -print0" 2>/dev/null | xargs -0 -I{} find {} -type f \( -name '*.md' -o -name '*.txt' -o -name '*.rst' \) 2>/dev/null | wc -l | tr -d ' ')
 echo "# skipped: $skipped doc-like files inside vendored, generated, agent-config or test-data folders"

@@ -117,6 +117,12 @@ expect "list-docs cap" 0 env HOME=/nonexistent LIST_DOCS_CAP=2 bash "$L" .
 has "list-docs cap" "... 3 more not listed (cap 2)"
 expect "list-docs home stop" 0 env HOME="$tmp/d" bash "$L" .
 lacks "list-docs home stop" "../AGENTS.md"
+rm -rf "$tmp/e"; mkdir "$tmp/e"; cd "$tmp/e"; printf '# Only a readme\n' > README.md
+expect "list-docs no pdf, no secrets (macOS bash 3.2 crashed here)" 0 env HOME=/nonexistent bash "$L" .
+has "list-docs no pdf, no secrets (macOS bash 3.2 crashed here)" "listed, not opened (0)"; has "list-docs no pdf, no secrets (macOS bash 3.2 crashed here)" "never opened (0)"
+rm -rf "$tmp/f"; mkdir "$tmp/f"; cd "$tmp/f"
+expect "list-docs empty folder" 0 env HOME=/nonexistent bash "$L" .
+has "list-docs empty folder" "docs in this repository: 0"
 
 # --- install.sh (core only, no network)
 h="$tmp/home"; mkdir -p "$h/.claude"; printf '# mine\nkeep me\n' > "$h/.claude/CLAUDE.md"
